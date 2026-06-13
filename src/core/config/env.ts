@@ -9,11 +9,11 @@ const envSchema = Joi.object({
   PORT: Joi.number().port().default(3000),
   API_PREFIX: Joi.string().pattern(/^\/[a-zA-Z0-9/_-]*$/).default('/api/v1'),
   CORS_ORIGIN: Joi.string().default('*'),
-  DATABASE_URL: Joi.string().uri().optional(),
-  REDIS_URL: Joi.string().uri().optional(),
-  MEILI_HOST: Joi.string().uri().optional(),
-  MEILI_MASTER_KEY: Joi.string().optional(),
-  JWT_SECRET: Joi.string().min(32).optional()
+  DATABASE_URL: Joi.string().empty('').optional(),
+  REDIS_URL: Joi.string().empty('').optional(),
+  MEILI_HOST: Joi.string().empty('').optional(),
+  MEILI_MASTER_KEY: Joi.string().empty('').optional(),
+  JWT_SECRET: Joi.string().empty('').optional()
 })
   .unknown(true)
   .required();

@@ -8,6 +8,12 @@ export function getMeilisearchClient(): Meilisearch {
     throw new Error('MEILI_HOST is required to use Meilisearch');
   }
 
+  try {
+    new URL(config.meilisearch.host);
+  } catch {
+    throw new Error('MEILI_HOST must be a valid URL');
+  }
+
   meilisearchClient ??= new Meilisearch({
     host: config.meilisearch.host,
     apiKey: config.meilisearch.masterKey

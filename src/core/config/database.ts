@@ -10,6 +10,10 @@ export function getDatabasePool(): pg.Pool {
     throw new Error('DATABASE_URL is required to use PostgreSQL');
   }
 
+  if (!/^postgres(?:ql)?:\/\//.test(config.databaseUrl)) {
+    throw new Error('DATABASE_URL must be a valid PostgreSQL connection URL');
+  }
+
   pool ??= new Pool({
     connectionString: config.databaseUrl
   });

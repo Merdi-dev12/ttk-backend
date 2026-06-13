@@ -8,6 +8,10 @@ export function getRedisClient(): Redis {
     throw new Error('REDIS_URL is required to use Redis');
   }
 
+  if (!/^rediss?:\/\//.test(config.redisUrl)) {
+    throw new Error('REDIS_URL must be a valid Redis connection URL');
+  }
+
   redisClient ??= new Redis(config.redisUrl, {
     lazyConnect: true,
     maxRetriesPerRequest: null
