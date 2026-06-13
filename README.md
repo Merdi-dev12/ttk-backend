@@ -48,6 +48,8 @@ Copy-Item .env.example .env
 | `npm run typecheck` | Vérifie les types sans générer de fichiers |
 | `npm run build` | Compile TypeScript dans `dist/` |
 | `npm start` | Exécute la version compilée |
+| `npm run infra:up` | Construit et démarre tous les conteneurs en arrière-plan |
+| `npm run infra:down` | Arrête et supprime tous les conteneurs du projet |
 
 ## Configuration
 
@@ -73,10 +75,16 @@ précise. Ne versionnez jamais le fichier `.env`.
 
 ## Infrastructure avec Docker
 
-Pour lancer l'API et ses services locaux :
+Pour lancer en arrière-plan l'API, PostgreSQL, Redis et Meilisearch :
 
 ```bash
-docker compose up --build
+npm run infra:up
+```
+
+Pour tout arrêter :
+
+```bash
+npm run infra:down
 ```
 
 Compose fournit PostgreSQL, Redis et Meilisearch. Le démarrage de l'API ne

@@ -22,7 +22,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 app.use(
-  '/docs',
+  '/api-docs',
   swaggerUi.serve,
   swaggerUi.setup(openApiDocument, {
     customSiteTitle: 'TTK API Documentation'

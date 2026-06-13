@@ -9,7 +9,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "start:dev": "tsx src/server.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "infra:up": "docker compose up --build -d",
+    "infra:down": "docker compose down"
   },
   "keywords": [],
   "author": "",
