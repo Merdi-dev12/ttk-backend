@@ -1,13 +1,18 @@
 import cors from 'cors';
 import express, {
-  type Application,
-  type ErrorRequestHandler,
-  type RequestHandler
+  type Application
 } from 'express';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { config } from './core/config/env.js';
 import { openApiDocument } from './core/config/swagger.js';
+import {
+  errorHandler,
+  notFoundHandler
+} from './core/middlewares/error.middleware.js';
+import authRoutes from './modules/auth/routes.js';
+import catalogRoutes from './modules/catalog/routes.js';
+import userRoutes from './modules/users/routes.js';
 
 const app: Application = express();
 
@@ -21,13 +26,14 @@ app.use(
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(openApiDocument, {
-    customSiteTitle: 'TTK API Documentation'
-  })
-);
+const swaggerHandler = swaggerUi.setup(openApiDocument, {
+  customSiteTitle: 'TTK API Documentation'
+});
+
+for (const docsPath of ['/docs', '/api-docs']) {
+  app.use(docsPath, swaggerUi.serve);
+  app.get([docsPath, `${docsPath}/`], swaggerHandler);
+}
 app.get('/docs.json', (_request, response) => {
   response.json(openApiDocument);
 });
@@ -40,35 +46,9 @@ app.get(`${config.apiPrefix}/health`, (_request, response) => {
   });
 });
 
-const notFoundHandler: RequestHandler = (request, response) => {
-  response.status(404).json({
-    status: 'error',
-    message: `Route not found: ${request.method} ${request.originalUrl}`
-  });
-};
-
-const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
-  const statusCode =
-    typeof error === 'object' &&
-    error !== null &&
-    'statusCode' in error &&
-    typeof error.statusCode === 'number'
-      ? error.statusCode
-      : 500;
-  const message =
-    config.env !== 'production' && error instanceof Error
-      ? error.message
-      : 'Internal server error';
-
-  if (config.env !== 'test') {
-    console.error(error);
-  }
-
-  response.status(statusCode).json({
-    status: 'error',
-    message
-  });
-};
+app.use(`${config.apiPrefix}/auth`, authRoutes);
+app.use(`${config.apiPrefix}/catalog`, catalogRoutes);
+app.use(`${config.apiPrefix}/users/admin`, userRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

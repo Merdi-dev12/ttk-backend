@@ -10,8 +10,16 @@
     "start": "node dist/server.js",
     "start:dev": "tsx src/server.ts",
     "typecheck": "tsc --noEmit",
-    "infra:up": "docker compose up --build -d",
-    "infra:down": "docker compose down"
+    "db:migrate": "tsx src/core/database/migrate.ts",
+    "db:migrate:docker": "docker compose exec api npm run db:migrate",
+    "admin:create": "tsx src/modules/users/createAdmin.ts",
+    "admin:create:docker": "docker compose exec api npm run admin:create",
+    "worker:email": "tsx watch src/core/queues/email.worker.ts",
+    "worker:search": "tsx watch src/core/queues/search.worker.ts",
+    "search:reindex": "tsx src/core/search/reindex.ts",
+    "search:reindex:docker": "docker compose exec api npm run search:reindex",
+    "infra:up": "docker compose up --build -d --wait",
+    "infra:down": "docker compose down --remove-orphans"
   },
   "keywords": [],
   "author": "",
