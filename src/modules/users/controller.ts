@@ -14,3 +14,9 @@ export const updateUserStatus: RequestHandler = async (request, response) => {
   const user = await userService.updateUserStatus(id, status);
   response.json({ status: 'success', data: { user } });
 };
+
+export const getUser: RequestHandler = async (request, response) => {
+  const { id } = request.validated?.params as { id: string };
+  const user = await userService.getUser(id);
+  response.json({ status: 'success', data: { user } });
+};

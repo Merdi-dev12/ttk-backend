@@ -25,12 +25,6 @@ async function createAdmin(): Promise<void> {
     );
     const admin = existing.rows[0];
 
-    if (admin && admin.email.toLowerCase() !== email.toLowerCase()) {
-      throw new Error(
-        `An admin already exists with another email: ${admin.email}`
-      );
-    }
-
     if (admin) {
       await pool.query(
         `UPDATE users

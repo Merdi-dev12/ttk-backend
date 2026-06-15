@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg';
 import { getDatabasePool } from '../../core/config/database.js';
 import { enqueueSearchSync } from '../../core/queues/search.queue.js';
 import { AppError } from '../../core/utils/appError.js';
+import { paginationResult } from '../../core/utils/pagination.js';
 import { createSlug } from '../../core/utils/slug.js';
 import type { ImageInput, ModalityInput } from './option.service.js';
 
@@ -171,7 +172,7 @@ export async function listPublicProducts(
 
   return {
     items: result.rows.map(({ total: _total, ...product }) => product),
-    pagination: { page, limit, total }
+    pagination: paginationResult({ page, limit }, total)
   };
 }
 
@@ -194,7 +195,101 @@ export async function listAdminProducts(
 
   return {
     items: result.rows.map(({ total: _total, ...product }) => product),
-    pagination: { page, limit, total }
+    pagination: paginationResult({ page, limit }, total)
+  };
+}
+
+export interface AdminProductsInput {
+  page: number;
+  limit: number;
+  search?: string;
+  sortBy: 'name' | 'status' | 'created_at' | 'updated_at' | 'minPrice' | 'maxPrice';
+  sortOrder: 'asc' | 'desc';
+  dateFrom?: Date;
+  dateTo?: Date;
+  serviceId?: string;
+  status?: string;
+  currency?: string;
+  availability?: string;
+  hasDiscount?: boolean;
+}
+
+export async function listAllAdminProducts(input: AdminProductsInput) {
+  const offset = (input.page - 1) * input.limit;
+  const search = input.search ? `%${input.search}%` : null;
+  const sortColumns = {
+    name: 'p.name',
+    status: 'p.status',
+    created_at: 'p.created_at',
+    updated_at: 'p.updated_at',
+    minPrice: '"minPrice"',
+    maxPrice: '"maxPrice"'
+  } as const;
+  const orderBy = sortColumns[input.sortBy];
+  const direction = input.sortOrder === 'asc' ? 'ASC' : 'DESC';
+  const result = await getDatabasePool().query(
+    `SELECT ${productSelection}, p.admin_note,
+            jsonb_build_object(
+              'id', s.id, 'name', s.name, 'slug', s.slug
+            ) AS service,
+            (
+              SELECT jsonb_build_object(
+                'id', pi.id, 'url', pi.url,
+                'isPrimary', pi.is_primary,
+                'displayOrder', pi.display_order
+              )
+              FROM product_images pi
+              WHERE pi.product_id = p.id
+              ORDER BY pi.is_primary DESC, pi.display_order, pi.created_at
+              LIMIT 1
+            ) AS "primaryImage",
+            (SELECT MIN(m.price) FROM modalities m
+             WHERE m.product_id = p.id) AS "minPrice",
+            (SELECT MAX(m.price) FROM modalities m
+             WHERE m.product_id = p.id) AS "maxPrice",
+            (SELECT COUNT(*)::INTEGER FROM modalities m
+             WHERE m.product_id = p.id) AS "modalitiesCount",
+            COUNT(*) OVER()::INTEGER AS total
+     FROM products p
+     JOIN services s ON s.id = p.service_id
+     WHERE ($3::UUID IS NULL OR p.service_id = $3)
+       AND ($4::catalog_status IS NULL OR p.status = $4)
+       AND ($5::TEXT IS NULL OR p.name ILIKE $5 OR p.slug ILIKE $5
+            OR p.description ILIKE $5 OR p.admin_note ILIKE $5
+            OR s.name ILIKE $5)
+       AND ($6::TIMESTAMPTZ IS NULL OR p.created_at >= $6)
+       AND ($7::TIMESTAMPTZ IS NULL OR p.created_at <= $7)
+       AND ($8::VARCHAR IS NULL OR EXISTS(
+         SELECT 1 FROM modalities m
+         WHERE m.product_id = p.id AND m.currency = $8
+       ))
+       AND ($9::availability_status IS NULL OR EXISTS(
+         SELECT 1 FROM modalities m
+         WHERE m.product_id = p.id AND m.availability = $9
+       ))
+       AND ($10::BOOLEAN IS NULL OR $10 = EXISTS(
+         SELECT 1 FROM modalities m
+         WHERE m.product_id = p.id AND m.old_price IS NOT NULL
+       ))
+     ORDER BY ${orderBy} ${direction} NULLS LAST, p.id ASC
+     LIMIT $1 OFFSET $2`,
+    [
+      input.limit,
+      offset,
+      input.serviceId ?? null,
+      input.status ?? null,
+      search,
+      input.dateFrom ?? null,
+      input.dateTo ?? null,
+      input.currency ?? null,
+      input.availability ?? null,
+      input.hasDiscount ?? null
+    ]
+  );
+  const total = result.rows[0]?.total ?? 0;
+  return {
+    items: result.rows.map(({ total: _total, ...product }) => product),
+    pagination: paginationResult(input, total)
   };
 }
 

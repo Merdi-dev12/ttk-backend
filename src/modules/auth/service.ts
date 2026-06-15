@@ -14,6 +14,7 @@ import type {
 import type { PublicUser } from './profile.service.js';
 import {
   issueTokenPair,
+  type SessionMetadata,
   revokeRefreshToken,
   rotateRefreshToken
 } from './token.service.js';
@@ -200,7 +201,7 @@ export async function verifyRegistration(
     const user = await client.query<PublicUser>(
       `INSERT INTO users(nom, postnom, email, password_hash)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, nom, postnom, email, role, status, created_at`,
+       RETURNING id, nom, postnom, email, role, status, avatar_url, created_at`,
       [pending.nom, pending.postnom, pending.email, pending.password_hash]
     );
     await client.query(
@@ -212,14 +213,18 @@ export async function verifyRegistration(
   });
 }
 
-export async function login(input: LoginInput): Promise<{
+export async function login(
+  input: LoginInput,
+  metadata: SessionMetadata
+): Promise<{
   user: PublicUser;
   accessToken: string;
   refreshToken: string;
 }> {
   const pool = getDatabasePool();
   const result = await pool.query<PublicUser & { password_hash: string }>(
-    `SELECT id, nom, postnom, email, role, status, created_at, password_hash
+    `SELECT id, nom, postnom, email, role, status, avatar_url,
+            created_at, password_hash
      FROM users
      WHERE email = $1`,
     [input.email]
@@ -239,15 +244,17 @@ export async function login(input: LoginInput): Promise<{
   }
 
   const tokens = await withTransaction((client) =>
-    issueTokenPair(client, user)
+    issueTokenPair(client, user, metadata)
   );
   const { password_hash: _passwordHash, ...publicUser } = user;
 
   return { user: publicUser, ...tokens };
 }
 
-export async function refresh(token: string) {
-  return withTransaction((client) => rotateRefreshToken(client, token));
+export async function refresh(token: string, metadata: SessionMetadata) {
+  return withTransaction((client) =>
+    rotateRefreshToken(client, token, metadata)
+  );
 }
 
 export async function logout(token: string): Promise<void> {

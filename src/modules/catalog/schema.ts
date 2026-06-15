@@ -1,4 +1,8 @@
 import Joi from 'joi';
+import {
+  dataTableFields,
+  paginationFields
+} from '../../core/validation/datatable.js';
 
 const uuid = Joi.string().uuid().required();
 const status = Joi.string().valid('ACTIVE', 'SUSPENDED', 'DELETED');
@@ -24,8 +28,7 @@ export const slugParamsSchema = Joi.object({
 });
 
 export const paginationSchema = Joi.object({
-  page: Joi.number().integer().min(1).default(1),
-  limit: Joi.number().integer().min(1).max(100).default(20)
+  ...paginationFields
 });
 
 export const searchSchema = paginationSchema.keys({
@@ -33,9 +36,28 @@ export const searchSchema = paginationSchema.keys({
   kind: Joi.string().valid('SERVICE', 'PRODUCT').optional()
 });
 
-export const adminServicesQuerySchema = paginationSchema.keys({
+export const adminServicesQuerySchema = Joi.object({
+  ...dataTableFields,
   status: status.optional(),
-  type: Joi.string().valid('PRODUCTS', 'FORM').optional()
+  type: Joi.string().valid('PRODUCTS', 'FORM').optional(),
+  sortBy: Joi.string()
+    .valid('name', 'type', 'status', 'created_at', 'updated_at')
+    .default('created_at'),
+  includeCounts: Joi.boolean().default(false)
+});
+
+export const adminProductsQuerySchema = Joi.object({
+  ...dataTableFields,
+  sortBy: Joi.string()
+    .valid('name', 'status', 'created_at', 'updated_at', 'minPrice', 'maxPrice')
+    .default('created_at'),
+  serviceId: Joi.string().uuid().optional(),
+  status: status.optional(),
+  currency: Joi.string().valid('USD', 'CDF').optional(),
+  availability: Joi.string()
+    .valid('AVAILABLE', 'UNAVAILABLE', 'ON_REQUEST')
+    .optional(),
+  hasDiscount: Joi.boolean().optional()
 });
 
 export const createServiceSchema = Joi.object({

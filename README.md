@@ -19,7 +19,7 @@ Services disponibles :
 
 - API : `http://localhost:3000`
 - Health check : `http://localhost:3000/api/v1/health`
-- Swagger : `http://localhost:3000/docs`
+- Swagger : `http://localhost:3000/api-docs`
 - Meilisearch : `http://localhost:7700`
 
 Pour arreter tous les conteneurs :

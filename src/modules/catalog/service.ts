@@ -1,6 +1,7 @@
 import { getDatabasePool } from '../../core/config/database.js';
 import { enqueueSearchSync } from '../../core/queues/search.queue.js';
 import { AppError } from '../../core/utils/appError.js';
+import { paginationResult } from '../../core/utils/pagination.js';
 import { createSlug } from '../../core/utils/slug.js';
 
 interface Pagination {
@@ -58,31 +59,91 @@ export async function listPublicServices(pagination: Pagination) {
 
   return {
     items: result.rows.map(({ total: _total, ...service }) => service),
-    pagination: { ...pagination, total }
+    pagination: paginationResult(pagination, total)
   };
 }
 
 export async function listAdminServices(input: Pagination & {
   status?: string;
   type?: string;
+  search?: string;
+  sortBy: 'name' | 'type' | 'status' | 'created_at' | 'updated_at';
+  sortOrder: 'asc' | 'desc';
+  dateFrom?: Date;
+  dateTo?: Date;
+  includeCounts: boolean;
 }) {
   const offset = (input.page - 1) * input.limit;
+  const search = input.search ? `%${input.search}%` : null;
+  const sortColumns = {
+    name: 's.name',
+    type: 's.type',
+    status: 's.status',
+    created_at: 's.created_at',
+    updated_at: 's.updated_at'
+  } as const;
+  const orderBy = sortColumns[input.sortBy];
+  const direction = input.sortOrder === 'asc' ? 'ASC' : 'DESC';
   const result = await getDatabasePool().query(
-    `SELECT id, name, slug, description, image_url, type, status,
-            created_at, updated_at, COUNT(*) OVER()::INTEGER AS total
-     FROM services
-     WHERE ($3::catalog_status IS NULL OR status = $3)
-       AND ($4::service_type IS NULL OR type = $4)
-     ORDER BY created_at DESC
+    `SELECT s.id, s.name, s.slug, s.description, s.image_url, s.type,
+            s.status, s.created_at, s.updated_at,
+            CASE WHEN $8 THEN (
+              SELECT COUNT(*)::INTEGER FROM products p WHERE p.service_id = s.id
+            ) END AS "productsCount",
+            CASE WHEN $8 THEN (
+              SELECT COUNT(*)::INTEGER FROM form_fields f WHERE f.service_id = s.id
+            ) END AS "fieldsCount",
+            COUNT(*) OVER()::INTEGER AS total
+     FROM services s
+     WHERE ($3::catalog_status IS NULL OR s.status = $3)
+       AND ($4::service_type IS NULL OR s.type = $4)
+       AND ($5::TEXT IS NULL OR s.name ILIKE $5 OR s.slug ILIKE $5
+            OR s.description ILIKE $5)
+       AND ($6::TIMESTAMPTZ IS NULL OR s.created_at >= $6)
+       AND ($7::TIMESTAMPTZ IS NULL OR s.created_at <= $7)
+     ORDER BY ${orderBy} ${direction}, s.id ASC
      LIMIT $1 OFFSET $2`,
-    [input.limit, offset, input.status ?? null, input.type ?? null]
+    [
+      input.limit,
+      offset,
+      input.status ?? null,
+      input.type ?? null,
+      search,
+      input.dateFrom ?? null,
+      input.dateTo ?? null,
+      input.includeCounts
+    ]
   );
   const total = result.rows[0]?.total ?? 0;
 
   return {
     items: result.rows.map(({ total: _total, ...service }) => service),
-    pagination: { page: input.page, limit: input.limit, total }
+    pagination: paginationResult(input, total)
   };
+}
+
+export async function getAdminService(id: string) {
+  const result = await getDatabasePool().query(
+    `SELECT s.*,
+            (SELECT COUNT(*)::INTEGER FROM products p
+             WHERE p.service_id = s.id) AS "productsCount",
+            COALESCE((
+              SELECT jsonb_agg(to_jsonb(f) ORDER BY f.display_order, f.created_at)
+              FROM form_fields f WHERE f.service_id = s.id
+            ), '[]'::jsonb) AS fields
+     FROM services s
+     WHERE s.id = $1`,
+    [id]
+  );
+
+  if (!result.rows[0]) {
+    throw new AppError(404, 'Service introuvable', 'SERVICE_NOT_FOUND');
+  }
+  return result.rows[0];
+}
+
+export async function deleteService(id: string) {
+  return updateServiceStatus(id, 'DELETED');
 }
 
 export async function getPublicService(slug: string) {

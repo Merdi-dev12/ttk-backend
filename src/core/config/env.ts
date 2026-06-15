@@ -13,6 +13,17 @@ const envSchema = Joi.object({
   REDIS_URL: Joi.string().empty('').optional(),
   MEILI_HOST: Joi.string().empty('').optional(),
   MEILI_MASTER_KEY: Joi.string().empty('').optional(),
+  STORAGE_ENDPOINT: Joi.string().uri().empty('').optional(),
+  STORAGE_REGION: Joi.string().default('us-east-1'),
+  STORAGE_BUCKET_PREFIX: Joi.string()
+    .pattern(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/)
+    .max(12)
+    .default('ttk'),
+  STORAGE_ACCESS_KEY: Joi.string().min(3).empty('').optional(),
+  STORAGE_SECRET_KEY: Joi.string().min(8).empty('').optional(),
+  STORAGE_FORCE_PATH_STYLE: Joi.boolean().default(true),
+  STORAGE_PUBLIC_BASE_URL: Joi.string().uri().empty('').optional(),
+  STORAGE_MAX_FILE_SIZE_MB: Joi.number().integer().min(1).max(50).default(10),
   JWT_SECRET: Joi.string().min(32).empty('').optional(),
   JWT_ACCESS_TTL: Joi.string().default('15m'),
   JWT_REFRESH_TTL_DAYS: Joi.number().integer().min(1).default(30),
@@ -53,6 +64,14 @@ const env = value as {
   REDIS_URL?: string;
   MEILI_HOST?: string;
   MEILI_MASTER_KEY?: string;
+  STORAGE_ENDPOINT?: string;
+  STORAGE_REGION: string;
+  STORAGE_BUCKET_PREFIX: string;
+  STORAGE_ACCESS_KEY?: string;
+  STORAGE_SECRET_KEY?: string;
+  STORAGE_FORCE_PATH_STYLE: boolean;
+  STORAGE_PUBLIC_BASE_URL?: string;
+  STORAGE_MAX_FILE_SIZE_MB: number;
   JWT_SECRET?: string;
   JWT_ACCESS_TTL: string;
   JWT_REFRESH_TTL_DAYS: number;
@@ -83,6 +102,16 @@ export const config = Object.freeze({
   meilisearch: {
     host: env.MEILI_HOST,
     masterKey: env.MEILI_MASTER_KEY
+  },
+  storage: {
+    endpoint: env.STORAGE_ENDPOINT,
+    region: env.STORAGE_REGION,
+    bucketPrefix: env.STORAGE_BUCKET_PREFIX,
+    accessKey: env.STORAGE_ACCESS_KEY,
+    secretKey: env.STORAGE_SECRET_KEY,
+    forcePathStyle: env.STORAGE_FORCE_PATH_STYLE,
+    publicBaseUrl: env.STORAGE_PUBLIC_BASE_URL,
+    maxFileSizeBytes: env.STORAGE_MAX_FILE_SIZE_MB * 1024 * 1024
   },
   auth: {
     jwtSecret: env.JWT_SECRET,

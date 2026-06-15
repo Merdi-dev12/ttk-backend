@@ -4,32 +4,16 @@ import { requireRole } from '../../core/middlewares/role.middleware.js';
 import { validate } from '../../core/middlewares/validate.middleware.js';
 import { catchAsync } from '../../core/utils/catchAsync.js';
 import * as controller from './controller.js';
-import {
-  listUsersQuerySchema,
-  updateUserStatusSchema,
-  userIdParamsSchema
-} from './schema.js';
+import { dashboardQuerySchema } from './schema.js';
 
 const router = Router();
 
 router.use(authenticate, requireRole('ADMIN'));
 router.get(
-  '/',
-  validate({ query: listUsersQuerySchema }),
-  catchAsync(controller.listUsers)
+  '/dashboard/summary',
+  validate({ query: dashboardQuerySchema }),
+  catchAsync(controller.summary)
 );
-router.get(
-  '/:id',
-  validate({ params: userIdParamsSchema }),
-  catchAsync(controller.getUser)
-);
-router.patch(
-  '/:id/status',
-  validate({
-    params: userIdParamsSchema,
-    body: updateUserStatusSchema
-  }),
-  catchAsync(controller.updateUserStatus)
-);
+router.get('/dashboard/activity', catchAsync(controller.activity));
 
 export default router;

@@ -55,14 +55,23 @@ export const getPublicProduct: RequestHandler = async (request, response) => {
 
 export const listAdminServices: RequestHandler = async (request, response) => {
   const data = await catalogService.listAdminServices(
-    request.validated?.query as {
-      page: number;
-      limit: number;
-      status?: string;
-      type?: string;
-    }
+    request.validated?.query as Parameters<
+      typeof catalogService.listAdminServices
+    >[0]
   );
   response.json({ status: 'success', data });
+};
+
+export const getAdminService: RequestHandler = async (request, response) => {
+  const { id } = request.validated?.params as IdParams;
+  const service = await catalogService.getAdminService(id);
+  response.json({ status: 'success', data: { service } });
+};
+
+export const deleteService: RequestHandler = async (request, response) => {
+  const { id } = request.validated?.params as IdParams;
+  const service = await catalogService.deleteService(id);
+  response.json({ status: 'success', data: { service } });
 };
 
 export const createService: RequestHandler = async (request, response) => {
@@ -142,6 +151,18 @@ export const listAdminProducts: RequestHandler = async (request, response) => {
     limit: number;
   };
   const data = await productService.listAdminProducts(serviceId, page, limit);
+  response.json({ status: 'success', data });
+};
+
+export const listAllAdminProducts: RequestHandler = async (
+  request,
+  response
+) => {
+  const data = await productService.listAllAdminProducts(
+    request.validated?.query as Parameters<
+      typeof productService.listAllAdminProducts
+    >[0]
+  );
   response.json({ status: 'success', data });
 };
 

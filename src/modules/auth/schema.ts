@@ -44,6 +44,16 @@ export const changePasswordSchema = Joi.object({
   newPassword: password
 });
 
+export const updateProfileSchema = Joi.object({
+  nom: Joi.string().trim().min(2).max(100),
+  postnom: Joi.string().trim().min(2).max(100).allow(null, ''),
+  avatarUrl: Joi.string().uri().max(2048).allow(null, '')
+}).min(1);
+
+export const sessionParamsSchema = Joi.object({
+  sessionId: Joi.string().uuid().required()
+});
+
 export type RegisterInput = {
   nom: string;
   postnom?: string | null;
@@ -59,4 +69,10 @@ export type VerifyOtpInput = {
 export type LoginInput = {
   email: string;
   password: string;
+};
+
+export type UpdateProfileInput = {
+  nom?: string;
+  postnom?: string | null;
+  avatarUrl?: string | null;
 };

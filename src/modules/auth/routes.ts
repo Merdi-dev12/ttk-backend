@@ -12,6 +12,8 @@ import {
   refreshSchema,
   registerSchema,
   resetPasswordSchema,
+  sessionParamsSchema,
+  updateProfileSchema,
   verifyRegistrationSchema
 } from './schema.js';
 
@@ -77,5 +79,22 @@ router.post(
   catchAsync(controller.changePassword)
 );
 router.get('/me', authenticate, catchAsync(controller.profile));
+router.patch(
+  '/me',
+  authenticate,
+  validate({ body: updateProfileSchema }),
+  catchAsync(controller.updateProfile)
+);
+router.get(
+  '/sessions',
+  authenticate,
+  catchAsync(controller.listSessions)
+);
+router.delete(
+  '/sessions/:sessionId',
+  authenticate,
+  validate({ params: sessionParamsSchema }),
+  catchAsync(controller.revokeSession)
+);
 
 export default router;

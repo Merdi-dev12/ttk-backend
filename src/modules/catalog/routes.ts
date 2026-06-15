@@ -6,6 +6,7 @@ import { catchAsync } from '../../core/utils/catchAsync.js';
 import * as controller from './controller.js';
 import {
   applyDiscountSchema,
+  adminProductsQuerySchema,
   adminServicesQuerySchema,
   createFieldSchema,
   createProductSchema,
@@ -43,10 +44,20 @@ admin.post(
   validate({ body: createServiceSchema }),
   catchAsync(controller.createService)
 );
+admin.get(
+  '/services/:id',
+  validate({ params: idParamsSchema }),
+  catchAsync(controller.getAdminService)
+);
 admin.patch(
   '/services/:id',
   validate({ params: idParamsSchema, body: updateServiceSchema }),
   catchAsync(controller.updateService)
+);
+admin.delete(
+  '/services/:id',
+  validate({ params: idParamsSchema }),
+  catchAsync(controller.deleteService)
 );
 admin.patch(
   '/services/:id/status',
@@ -67,6 +78,11 @@ admin.delete(
   '/services/:serviceId/fields/:fieldId',
   validate({ params: serviceFieldParamsSchema }),
   catchAsync(controller.deleteFormField)
+);
+admin.get(
+  '/products',
+  validate({ query: adminProductsQuerySchema }),
+  catchAsync(controller.listAllAdminProducts)
 );
 admin.get(
   '/services/:serviceId/products',

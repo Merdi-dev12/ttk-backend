@@ -11,7 +11,9 @@ import {
   notFoundHandler
 } from './core/middlewares/error.middleware.js';
 import authRoutes from './modules/auth/routes.js';
+import adminRoutes from './modules/admin/routes.js';
 import catalogRoutes from './modules/catalog/routes.js';
+import storageRoutes from './modules/storage/routes.js';
 import userRoutes from './modules/users/routes.js';
 
 const app: Application = express();
@@ -30,11 +32,9 @@ const swaggerHandler = swaggerUi.setup(openApiDocument, {
   customSiteTitle: 'TTK API Documentation'
 });
 
-for (const docsPath of ['/docs', '/api-docs']) {
-  app.use(docsPath, swaggerUi.serve);
-  app.get([docsPath, `${docsPath}/`], swaggerHandler);
-}
-app.get('/docs.json', (_request, response) => {
+app.use('/api-docs', swaggerUi.serve);
+app.get(['/api-docs', '/api-docs/'], swaggerHandler);
+app.get('/api-docs.json', (_request, response) => {
   response.json(openApiDocument);
 });
 
@@ -47,7 +47,9 @@ app.get(`${config.apiPrefix}/health`, (_request, response) => {
 });
 
 app.use(`${config.apiPrefix}/auth`, authRoutes);
+app.use(`${config.apiPrefix}/admin`, adminRoutes);
 app.use(`${config.apiPrefix}/catalog`, catalogRoutes);
+app.use(`${config.apiPrefix}/storage/admin`, storageRoutes);
 app.use(`${config.apiPrefix}/users/admin`, userRoutes);
 
 app.use(notFoundHandler);

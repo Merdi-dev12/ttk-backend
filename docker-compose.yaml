@@ -19,6 +19,14 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD:-change-me}@redis:6379
       MEILI_HOST: http://meilisearch:7700
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-change-me-with-at-least-16-characters}
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_REGION: ${STORAGE_REGION:-us-east-1}
+      STORAGE_BUCKET_PREFIX: ${STORAGE_BUCKET_PREFIX:-ttk}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-ttk_storage}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-change-me-storage-password}
+      STORAGE_FORCE_PATH_STYLE: "true"
+      STORAGE_PUBLIC_BASE_URL: http://localhost:${STORAGE_PORT:-9000}
+      STORAGE_MAX_FILE_SIZE_MB: ${STORAGE_MAX_FILE_SIZE_MB:-10}
       JWT_SECRET: ${JWT_SECRET:-change-me-with-at-least-32-characters}
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
       JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS:-30}
@@ -34,6 +42,8 @@ services:
       redis:
         condition: service_healthy
       meilisearch:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     healthcheck:
       test:
@@ -133,8 +143,27 @@ services:
       retries: 10
       start_period: 10s
 
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY:-ttk_storage}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_KEY:-change-me-storage-password}
+    ports:
+      - "${STORAGE_PORT:-9000}:9000"
+      - "${STORAGE_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 volumes:
   api_node_modules:
   postgres_data:
   redis_data:
   meilisearch_data:
+  minio_data:

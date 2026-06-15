@@ -1,7 +1,8 @@
 FROM node:20-alpine AS development
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline --no-audit
 COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
@@ -9,7 +10,8 @@ CMD ["npm", "run", "dev"]
 FROM node:20-alpine AS build
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline --no-audit
 COPY . .
 RUN npm run build
 RUN npm prune --omit=dev

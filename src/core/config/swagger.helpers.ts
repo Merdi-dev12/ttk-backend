@@ -17,12 +17,14 @@ export const requestBody = (schemaName: string): OpenApiObject => ({
 
 export const jsonResponse = (
   description: string,
-  schemaName: string
+  schemaName: string,
+  example?: Record<string, unknown>
 ): OpenApiObject => ({
   description,
   content: {
     'application/json': {
-      schema: schemaRef(schemaName)
+      schema: schemaRef(schemaName),
+      ...(example ? { example } : {})
     }
   }
 });

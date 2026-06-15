@@ -9,7 +9,7 @@ http://localhost:3000/api/v1
 Swagger :
 
 ```text
-http://localhost:3000/docs
+http://localhost:3000/api-docs
 ```
 
 ## 1. Demarrage initial

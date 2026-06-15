@@ -27,7 +27,9 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
 
 server = app.listen(config.port, config.host, () => {
   console.info(`TTK API listening on http://localhost:${config.port}`);
-  console.info(`Swagger UI available on http://localhost:${config.port}/docs`);
+  console.info(
+    `Swagger UI available on http://localhost:${config.port}/api-docs`
+  );
 });
 
 process.once('SIGINT', () => void shutdown('SIGINT'));
