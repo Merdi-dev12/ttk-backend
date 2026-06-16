@@ -2,7 +2,7 @@ import { Worker } from 'bullmq';
 import nodemailer from 'nodemailer';
 import { config } from '../config/env.js';
 import { getRedisConnectionOptions } from '../config/redis.js';
-import type { OtpEmailJob } from './email.queue.js';
+import type { TransactionalEmailJob } from './email.queue.js';
 
 const { host, port, secure, user, password, from } = config.mail;
 
@@ -22,9 +22,22 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const worker = new Worker<OtpEmailJob>(
+const worker = new Worker<TransactionalEmailJob>(
   'transactional-emails',
   async (job) => {
+    if (job.data.type === 'ADMIN_TEST_EMAIL') {
+      await transporter.sendMail({
+        from,
+        to: job.data.to,
+        subject: `Test email ${job.data.platformName}`,
+        text: [
+          `Cet email confirme que les notifications de ${job.data.platformName}`,
+          'sont correctement configurées.'
+        ].join(' ')
+      });
+      return;
+    }
+
     const isRegistration = job.data.type === 'REGISTRATION_OTP';
     const subject = isRegistration
       ? 'Code de validation de votre compte TTK'

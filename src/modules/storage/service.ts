@@ -21,6 +21,27 @@ const allowedImages = new Map([
   ['image/avif', 'avif']
 ]);
 
+async function getUploadPolicy() {
+  const result = await getDatabasePool().query<{
+    value: {
+      maxImageSizeMb?: number;
+      allowedImageTypes?: string[];
+    };
+  }>(
+    `SELECT value FROM admin_settings WHERE section = 'storage'`
+  );
+  const value = result.rows[0]?.value;
+  return {
+    maxBytes: Math.min(
+      (value?.maxImageSizeMb ?? 10) * 1024 * 1024,
+      config.storage.maxFileSizeBytes
+    ),
+    allowedTypes: new Set(
+      value?.allowedImageTypes ?? Array.from(allowedImages.keys())
+    )
+  };
+}
+
 function storageConfiguration() {
   const { publicBaseUrl, bucketPrefix } = config.storage;
   if (!publicBaseUrl) {
@@ -198,11 +219,19 @@ export async function uploadObject(
 
   const detected = await fileTypeFromBuffer(file.buffer);
   const extension = detected && allowedImages.get(detected.mime);
-  if (!detected || !extension) {
+  const policy = await getUploadPolicy();
+  if (!detected || !extension || !policy.allowedTypes.has(detected.mime)) {
     throw new AppError(
       415,
       'Seules les images JPEG, PNG, WebP et AVIF sont autorisées',
       'UNSUPPORTED_FILE_TYPE'
+    );
+  }
+  if (file.size > policy.maxBytes) {
+    throw new AppError(
+      413,
+      'Le fichier dépasse la taille maximale autorisée',
+      'FILE_TOO_LARGE'
     );
   }
 

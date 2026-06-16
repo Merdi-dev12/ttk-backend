@@ -9,11 +9,19 @@ export interface OtpEmailJob {
   expiresInMinutes: number;
 }
 
+export interface TestEmailJob {
+  type: 'ADMIN_TEST_EMAIL';
+  to: string;
+  platformName: string;
+}
+
+export type TransactionalEmailJob = OtpEmailJob | TestEmailJob;
+
 type EmailQueue = Queue<
-  OtpEmailJob,
+  TransactionalEmailJob,
   void,
   string,
-  OtpEmailJob,
+  TransactionalEmailJob,
   void,
   string
 >;
@@ -22,10 +30,10 @@ let emailQueue: EmailQueue | undefined;
 
 function getEmailQueue(): EmailQueue {
   emailQueue ??= new Queue<
-    OtpEmailJob,
+    TransactionalEmailJob,
     void,
     string,
-    OtpEmailJob,
+    TransactionalEmailJob,
     void,
     string
   >('transactional-emails', {
@@ -45,5 +53,9 @@ function getEmailQueue(): EmailQueue {
 }
 
 export async function enqueueOtpEmail(data: OtpEmailJob): Promise<void> {
+  await getEmailQueue().add(data.type, data);
+}
+
+export async function enqueueTestEmail(data: TestEmailJob): Promise<void> {
   await getEmailQueue().add(data.type, data);
 }

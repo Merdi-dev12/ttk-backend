@@ -7,7 +7,8 @@ interface DashboardFilters {
 }
 
 export async function getDashboardSummary(filters: DashboardFilters) {
-  const result = await getDatabasePool().query(
+  const pool = getDatabasePool();
+  const result = await pool.query(
     `SELECT
        (SELECT COUNT(*)::INTEGER FROM services) AS services_total,
        (SELECT COUNT(*)::INTEGER FROM services
@@ -34,6 +35,27 @@ export async function getDashboardSummary(filters: DashboardFilters) {
     [filters.dateFrom ?? null, filters.dateTo ?? null]
   );
   const row = result.rows[0];
+  const seriesResult = await pool.query(
+    `WITH days AS (
+       SELECT generate_series(
+         COALESCE($1::DATE, CURRENT_DATE - INTERVAL '29 days'),
+         COALESCE($2::DATE, CURRENT_DATE),
+         INTERVAL '1 day'
+       )::DATE AS date
+     )
+     SELECT TO_CHAR(d.date, 'YYYY-MM-DD') AS date,
+            (SELECT COUNT(*)::INTEGER FROM users u
+             WHERE u.role = 'USER' AND u.created_at::DATE = d.date) AS users,
+            (SELECT COUNT(*)::INTEGER FROM services s
+             WHERE s.created_at::DATE = d.date) AS services,
+            (SELECT COUNT(*)::INTEGER FROM products p
+             WHERE p.created_at::DATE = d.date) AS products,
+            0::INTEGER AS orders,
+            0::NUMERIC AS revenue
+     FROM days d
+     ORDER BY d.date`,
+    [filters.dateFrom ?? null, filters.dateTo ?? null]
+  );
 
   return {
     services: {
@@ -56,7 +78,7 @@ export async function getDashboardSummary(filters: DashboardFilters) {
     orders: null,
     payments: null,
     submissions: null,
-    series: [],
+    series: seriesResult.rows,
     currency: filters.currency,
     unavailableDomains: [
       'orders',

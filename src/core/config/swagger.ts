@@ -6,6 +6,7 @@ import { dashboardPaths } from './swagger.dashboard.js';
 import { publicPaths } from './swagger.public.js';
 import { swaggerSchemas } from './swagger.schemas.js';
 import { storagePaths } from './swagger.storage.js';
+import { settingsPaths } from './swagger.settings.js';
 import { userPaths } from './swagger.users.js';
 
 export const openApiDocument = {
@@ -57,6 +58,11 @@ export const openApiDocument = {
       name: 'Storage Admin',
       description:
         'Buckets S3/MinIO et images publiques destinées au catalogue.'
+    },
+    {
+      name: 'Settings Admin',
+      description:
+        'Configuration fonctionnelle, cache et notifications de test.'
     }
   ],
   paths: {
@@ -66,6 +72,7 @@ export const openApiDocument = {
     ...adminExtraPaths,
     ...dashboardPaths,
     ...storagePaths,
+    ...settingsPaths,
     ...userPaths
   },
   components: {
