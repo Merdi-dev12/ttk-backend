@@ -68,6 +68,10 @@ export const settingsSchemas = {
     allowedImageTypes: Joi.array().items(
       Joi.string().valid('image/jpeg', 'image/png', 'image/webp', 'image/avif')
     ).min(1).unique().required(),
+    maxVideoSizeMb: Joi.number().integer().min(1).max(500).required(),
+    allowedVideoTypes: Joi.array().items(
+      Joi.string().valid('video/mp4', 'video/webm', 'video/quicktime')
+    ).min(1).unique().required(),
     imageQuality: Joi.number().integer().min(40).max(100).required(),
     generateWebp: Joi.boolean().required()
   })

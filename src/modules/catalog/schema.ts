@@ -105,6 +105,7 @@ export const updateFieldSchema = Joi.object({
 
 export const imageSchema = Joi.object({
   url: url.required(),
+  mediaType: Joi.string().valid('IMAGE', 'VIDEO').default('IMAGE'),
   isPrimary: Joi.boolean().default(false),
   displayOrder: Joi.number().integer().min(0).default(0)
 });

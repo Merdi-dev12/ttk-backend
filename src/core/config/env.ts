@@ -25,6 +25,7 @@ const envSchema = Joi.object({
   STORAGE_FORCE_PATH_STYLE: Joi.boolean().default(true),
   STORAGE_PUBLIC_BASE_URL: Joi.string().uri().empty('').optional(),
   STORAGE_MAX_FILE_SIZE_MB: Joi.number().integer().min(1).max(50).default(10),
+  STORAGE_MAX_VIDEO_SIZE_MB: Joi.number().integer().min(1).max(500).default(100),
   JWT_SECRET: Joi.string().min(32).empty('').optional(),
   JWT_ACCESS_TTL: Joi.string().default('15m'),
   JWT_REFRESH_TTL_DAYS: Joi.number().integer().min(1).default(30),
@@ -81,6 +82,7 @@ const env = value as {
   STORAGE_FORCE_PATH_STYLE: boolean;
   STORAGE_PUBLIC_BASE_URL?: string;
   STORAGE_MAX_FILE_SIZE_MB: number;
+  STORAGE_MAX_VIDEO_SIZE_MB: number;
   JWT_SECRET?: string;
   JWT_ACCESS_TTL: string;
   JWT_REFRESH_TTL_DAYS: number;
@@ -126,7 +128,8 @@ export const config = Object.freeze({
     secretKey: env.STORAGE_SECRET_KEY,
     forcePathStyle: env.STORAGE_FORCE_PATH_STYLE,
     publicBaseUrl: env.STORAGE_PUBLIC_BASE_URL,
-    maxFileSizeBytes: env.STORAGE_MAX_FILE_SIZE_MB * 1024 * 1024
+    maxFileSizeBytes: env.STORAGE_MAX_FILE_SIZE_MB * 1024 * 1024,
+    maxVideoFileSizeBytes: env.STORAGE_MAX_VIDEO_SIZE_MB * 1024 * 1024
   },
   auth: {
     jwtSecret: env.JWT_SECRET,

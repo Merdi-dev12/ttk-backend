@@ -7,7 +7,10 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     files: 1,
-    fileSize: config.storage.maxFileSizeBytes
+    fileSize: Math.max(
+      config.storage.maxFileSizeBytes,
+      config.storage.maxVideoFileSizeBytes
+    )
   }
 });
 

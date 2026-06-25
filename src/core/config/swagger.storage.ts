@@ -76,7 +76,7 @@ export const storagePaths = {
     post: {
       tags: ['Storage Admin'],
       security: secure,
-      summary: 'Téléverser une image',
+      summary: 'Téléverser une image ou une vidéo',
       description:
         'Détecte le type MIME réel, génère le nom et retourne l’URL à utiliser dans le catalogue.',
       parameters: [bucketId],
@@ -91,7 +91,7 @@ export const storagePaths = {
                 file: {
                   type: 'string',
                   format: 'binary',
-                  description: 'JPEG, PNG, WebP ou AVIF; 10 Mo maximum par défaut.'
+                  description: 'JPEG, PNG, WebP, AVIF, MP4, WebM ou MOV. Images: 10 Mo par défaut; vidéos: 100 Mo par défaut.'
                 }
               }
             }
@@ -100,7 +100,7 @@ export const storagePaths = {
       },
       responses: {
         '201': jsonResponse(
-          'L’image est stockée et son URL publique est retournée.',
+          'Le média est stocké et son URL publique est retournée.',
           'StorageObjectResponse'
         ),
         ...adminErrors,
@@ -113,7 +113,7 @@ export const storagePaths = {
         '415': errorResponse(
           'La signature binaire ne correspond pas à un format accepté.',
           'UNSUPPORTED_FILE_TYPE',
-          'Seules les images JPEG, PNG, WebP et AVIF sont autorisées'
+          'Seuls les fichiers JPEG, PNG, WebP, AVIF, MP4, WebM et MOV sont autorisés'
         ),
         '503': errorResponse(
           'Le stockage S3 est indisponible.',

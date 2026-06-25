@@ -47,6 +47,7 @@ const productSelection = `
       jsonb_build_object(
         'id', pi.id,
         'url', pi.url,
+        'mediaType', pi.media_type,
         'isPrimary', pi.is_primary,
         'displayOrder', pi.display_order
       ) ORDER BY pi.display_order, pi.created_at
@@ -106,14 +107,15 @@ export async function createProduct(
     for (const [index, image] of input.images.entries()) {
       await client.query(
         `INSERT INTO product_images(
-           product_id, url, is_primary, display_order
+           product_id, url, is_primary, display_order, media_type
          )
-         VALUES ($1, $2, $3, $4)`,
+         VALUES ($1, $2, $3, $4, $5)`,
         [
           productId,
           image.url,
           image.isPrimary || (!hasPrimary && index === 0),
-          image.displayOrder
+          image.displayOrder,
+          image.mediaType
         ]
       );
     }
@@ -235,6 +237,7 @@ export async function listAllAdminProducts(input: AdminProductsInput) {
             (
               SELECT jsonb_build_object(
                 'id', pi.id, 'url', pi.url,
+                'mediaType', pi.media_type,
                 'isPrimary', pi.is_primary,
                 'displayOrder', pi.display_order
               )

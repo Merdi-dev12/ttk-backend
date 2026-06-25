@@ -21,23 +21,38 @@ const allowedImages = new Map([
   ['image/avif', 'avif']
 ]);
 
+const allowedVideos = new Map([
+  ['video/mp4', 'mp4'],
+  ['video/webm', 'webm'],
+  ['video/quicktime', 'mov']
+]);
+
 async function getUploadPolicy() {
   const result = await getDatabasePool().query<{
     value: {
       maxImageSizeMb?: number;
       allowedImageTypes?: string[];
+      maxVideoSizeMb?: number;
+      allowedVideoTypes?: string[];
     };
   }>(
     `SELECT value FROM admin_settings WHERE section = 'storage'`
   );
   const value = result.rows[0]?.value;
   return {
-    maxBytes: Math.min(
+    maxImageBytes: Math.min(
       (value?.maxImageSizeMb ?? 10) * 1024 * 1024,
       config.storage.maxFileSizeBytes
     ),
-    allowedTypes: new Set(
+    maxVideoBytes: Math.min(
+      (value?.maxVideoSizeMb ?? 100) * 1024 * 1024,
+      config.storage.maxVideoFileSizeBytes
+    ),
+    allowedImageTypes: new Set(
       value?.allowedImageTypes ?? Array.from(allowedImages.keys())
+    ),
+    allowedVideoTypes: new Set(
+      value?.allowedVideoTypes ?? Array.from(allowedVideos.keys())
     )
   };
 }
@@ -254,16 +269,26 @@ export async function uploadObject(
   }
 
   const detected = await fileTypeFromBuffer(file.buffer);
-  const extension = detected && allowedImages.get(detected.mime);
+  const imageExtension = detected && allowedImages.get(detected.mime);
+  const videoExtension = detected && allowedVideos.get(detected.mime);
+  const extension = imageExtension ?? videoExtension;
   const policy = await getUploadPolicy();
-  if (!detected || !extension || !policy.allowedTypes.has(detected.mime)) {
+  const isAllowedImage = Boolean(
+    detected && imageExtension && policy.allowedImageTypes.has(detected.mime)
+  );
+  const isAllowedVideo = Boolean(
+    detected && videoExtension && policy.allowedVideoTypes.has(detected.mime)
+  );
+
+  if (!detected || !extension || (!isAllowedImage && !isAllowedVideo)) {
     throw new AppError(
       415,
-      'Seules les images JPEG, PNG, WebP et AVIF sont autorisées',
+      'Seuls les fichiers JPEG, PNG, WebP, AVIF, MP4, WebM et MOV sont autorisés',
       'UNSUPPORTED_FILE_TYPE'
     );
   }
-  if (file.size > policy.maxBytes) {
+  const maxBytes = isAllowedVideo ? policy.maxVideoBytes : policy.maxImageBytes;
+  if (file.size > maxBytes) {
     throw new AppError(
       413,
       'Le fichier dépasse la taille maximale autorisée',

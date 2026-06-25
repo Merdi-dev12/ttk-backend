@@ -93,6 +93,7 @@ export const settingsSchemas = {
     type: 'object',
     required: [
       'maxImageSizeMb', 'allowedImageTypes',
+      'maxVideoSizeMb', 'allowedVideoTypes',
       'imageQuality', 'generateWebp'
     ],
     properties: {
@@ -103,6 +104,15 @@ export const settingsSchemas = {
         items: {
           type: 'string',
           enum: ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+        }
+      },
+      maxVideoSizeMb: { type: 'integer', minimum: 1, maximum: 500 },
+      allowedVideoTypes: {
+        type: 'array',
+        minItems: 1,
+        items: {
+          type: 'string',
+          enum: ['video/mp4', 'video/webm', 'video/quicktime']
         }
       },
       imageQuality: { type: 'integer', minimum: 40, maximum: 100 },

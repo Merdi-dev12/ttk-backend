@@ -9,6 +9,7 @@ npm install
 npm run infra:up
 npm run db:migrate:docker
 npm run admin:create:docker
+npm run db:seed:catalog:docker
 npm run search:reindex:docker
 ```
 
@@ -40,6 +41,8 @@ npm run infra:down
 | `npm run infra:down` | Arrete tous les conteneurs |
 | `npm run db:migrate` | Applique les migrations depuis la machine |
 | `npm run db:migrate:docker` | Applique les migrations depuis l'API Docker |
+| `npm run db:seed:catalog` | Cree 15 services de demo, 75 produits et 225 images parlantes |
+| `npm run db:seed:catalog:docker` | Execute le seed catalogue depuis l'API Docker |
 | `npm run admin:create` | Cree l'unique admin depuis `.env` |
 | `npm run admin:create:docker` | Cree ou reinitialise l'admin depuis Docker |
 | `npm run worker:email` | Lance le worker BullMQ d'emails |

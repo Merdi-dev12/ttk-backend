@@ -7,6 +7,7 @@ export interface ImageInput {
   url: string;
   isPrimary: boolean;
   displayOrder: number;
+  mediaType: 'IMAGE' | 'VIDEO';
 }
 
 export interface ModalityInput {
@@ -65,16 +66,22 @@ export async function addImage(productId: string, input: ImageInput) {
     }
     const result = await client.query(
       `INSERT INTO product_images(
-         product_id, url, is_primary, display_order
+         product_id, url, is_primary, display_order, media_type
        )
        SELECT $1, $2,
               ($3 OR NOT EXISTS(
                 SELECT 1 FROM product_images WHERE product_id = $1
               )),
-              $4
+              $4, $5
        WHERE EXISTS(SELECT 1 FROM products WHERE id = $1)
        RETURNING *`,
-      [productId, input.url, input.isPrimary, input.displayOrder]
+      [
+        productId,
+        input.url,
+        input.isPrimary,
+        input.displayOrder,
+        input.mediaType
+      ]
     );
 
     if (!result.rows[0]) {
@@ -110,7 +117,8 @@ export async function updateImage(
       `UPDATE product_images SET
          url = COALESCE($3, url),
          is_primary = COALESCE($4, is_primary),
-         display_order = COALESCE($5, display_order)
+         display_order = COALESCE($5, display_order),
+         media_type = COALESCE($6, media_type)
        WHERE id = $1 AND product_id = $2
        RETURNING *`,
       [
@@ -118,7 +126,8 @@ export async function updateImage(
         productId,
         input.url ?? null,
         input.isPrimary ?? null,
-        input.displayOrder ?? null
+        input.displayOrder ?? null,
+        input.mediaType ?? null
       ]
     );
 

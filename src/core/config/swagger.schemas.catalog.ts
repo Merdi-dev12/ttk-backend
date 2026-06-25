@@ -173,6 +173,7 @@ export const catalogSchemas = {
     required: ['url'],
     properties: {
       url: { type: 'string', format: 'uri', example: 'https://cdn.example.com/netflix.jpg' },
+      mediaType: { type: 'string', enum: ['IMAGE', 'VIDEO'], default: 'IMAGE', example: 'IMAGE' },
       isPrimary: { type: 'boolean', default: false, example: true },
       displayOrder: { type: 'integer', minimum: 0, default: 0, example: 0 }
     }
@@ -182,6 +183,7 @@ export const catalogSchemas = {
     minProperties: 1,
     properties: {
       url: { type: 'string', format: 'uri' },
+      mediaType: { type: 'string', enum: ['IMAGE', 'VIDEO'] },
       isPrimary: { type: 'boolean' },
       displayOrder: { type: 'integer', minimum: 0 }
     }
@@ -191,6 +193,7 @@ export const catalogSchemas = {
     properties: {
       id: uuid,
       url: { type: 'string', format: 'uri' },
+      mediaType: { type: 'string', enum: ['IMAGE', 'VIDEO'] },
       isPrimary: { type: 'boolean' },
       displayOrder: { type: 'integer' }
     }
