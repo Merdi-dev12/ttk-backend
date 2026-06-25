@@ -174,7 +174,10 @@ Content-Type: application/json
 - Redis conserve les files BullMQ pour les emails OTP et l'indexation.
 - Meilisearch contient une copie optimisee des services et produits actifs.
 - Suspendre ou supprimer un service/produit le retire de la recherche.
-- Les volumes Docker conservent les donnees apres `infra:down`.
+- Les volumes Docker nommes conservent les donnees apres `infra:down`.
+- Ne pas utiliser `docker compose down -v` ni supprimer les volumes Docker
+  `ttk-backend_*` sans sauvegarde: cela efface PostgreSQL, Redis,
+  Meilisearch ou MinIO.
 
 Connexion pgAdmin locale :
 

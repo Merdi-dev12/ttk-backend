@@ -170,7 +170,12 @@ services:
 
 volumes:
   api_node_modules:
+    name: ttk-backend_api_node_modules
   postgres_data:
+    name: ttk-backend_postgres_data
   redis_data:
+    name: ttk-backend_redis_data
   meilisearch_data:
+    name: ttk-backend_meilisearch_data
   minio_data:
+    name: ttk-backend_minio_data

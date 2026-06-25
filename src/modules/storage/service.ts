@@ -81,9 +81,30 @@ function publicReadPolicy(providerName: string): string {
   });
 }
 
+function storageErrorName(error: unknown): string | undefined {
+  if (typeof error === 'object' && error !== null && 'name' in error) {
+    return String(error.name);
+  }
+  return undefined;
+}
+
+function isProviderBucketConflict(error: unknown): boolean {
+  return [
+    'BucketAlreadyOwnedByYou',
+    'BucketAlreadyExists'
+  ].includes(storageErrorName(error) ?? '');
+}
+
 function mapStorageError(error: unknown): never {
   if (error instanceof AppError) {
     throw error;
+  }
+  if (isProviderBucketConflict(error)) {
+    throw new AppError(
+      409,
+      'Un bucket avec ce nom existe deja dans le stockage',
+      'STORAGE_BUCKET_CONFLICT'
+    );
   }
   if (
     typeof error === 'object' &&
@@ -102,6 +123,23 @@ function mapStorageError(error: unknown): never {
     'Le service de stockage est temporairement indisponible',
     'STORAGE_UNAVAILABLE'
   );
+}
+
+async function insertBucketRecord(
+  input: CreateBucketInput,
+  slug: string,
+  providerName: string,
+  adminId: string
+) {
+  const result = await getDatabasePool().query(
+    `INSERT INTO storage_buckets(
+       name, slug, provider_name, is_public, created_by
+     )
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, name, slug, is_public, created_at`,
+    [input.name, slug, providerName, input.public, adminId]
+  );
+  return { ...result.rows[0], objects_count: 0 };
 }
 
 export async function listBuckets() {
@@ -146,8 +184,14 @@ export async function createBucket(
   let remoteCreated = false;
 
   try {
-    await storage.send(new CreateBucketCommand({ Bucket: providerName }));
-    remoteCreated = true;
+    try {
+      await storage.send(new CreateBucketCommand({ Bucket: providerName }));
+      remoteCreated = true;
+    } catch (error) {
+      if (!isProviderBucketConflict(error)) {
+        throw error;
+      }
+    }
 
     if (input.public) {
       await storage.send(new PutBucketPolicyCommand({
@@ -156,15 +200,7 @@ export async function createBucket(
       }));
     }
 
-    const result = await getDatabasePool().query(
-      `INSERT INTO storage_buckets(
-         name, slug, provider_name, is_public, created_by
-       )
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, slug, is_public, created_at`,
-      [input.name, slug, providerName, input.public, adminId]
-    );
-    return { ...result.rows[0], objects_count: 0 };
+    return await insertBucketRecord(input, slug, providerName, adminId);
   } catch (error) {
     if (remoteCreated) {
       await storage.send(new DeleteBucketCommand({
