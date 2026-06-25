@@ -97,6 +97,18 @@ export const authSchemas = {
       password: { type: 'string', format: 'password', example: 'Password123' }
     }
   },
+  GoogleLoginRequest: {
+    type: 'object',
+    required: ['credential'],
+    properties: {
+      credential: {
+        type: 'string',
+        description:
+          'ID token JWT reçu dans credential depuis Google Identity Services.',
+        example: 'eyJhbGciOiJSUzI1NiIsImtpZCI6Ii4uLiJ9...'
+      }
+    }
+  },
   RefreshRequest: {
     type: 'object',
     required: ['refreshToken'],

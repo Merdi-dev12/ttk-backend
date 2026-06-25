@@ -127,6 +127,44 @@ export const authPaths = {
       }
     }
   },
+  '/auth/google': {
+    post: {
+      tags: ['Auth'],
+      summary: 'Se connecter avec Google',
+      description:
+        'Vérifie l’ID token Google, crée ou relie le compte par email vérifié, puis retourne les jetons TTK habituels.',
+      requestBody: requestBody('GoogleLoginRequest'),
+      responses: {
+        '200': jsonResponse(
+          'Le compte Google est authentifié et une session TTK est créée.',
+          'LoginResponse'
+        ),
+        '400': validationError,
+        '401': errorResponse(
+          'Le jeton Google est invalide, expiré ou destiné à un autre Client ID.',
+          'INVALID_GOOGLE_TOKEN',
+          'Jeton Google invalide ou expiré'
+        ),
+        '403': errorResponse(
+          'Le compte relié a été révoqué.',
+          'ACCOUNT_REVOKED',
+          'Ce compte a été révoqué'
+        ),
+        '409': errorResponse(
+          'L’email et le compte Google correspondent à deux comptes différents.',
+          'GOOGLE_ACCOUNT_CONFLICT',
+          'Le compte Google entre en conflit avec un compte existant'
+        ),
+        '429': rateLimitError,
+        '503': errorResponse(
+          'GOOGLE_CLIENT_ID n’est pas configuré sur le backend.',
+          'GOOGLE_AUTH_NOT_CONFIGURED',
+          'La connexion Google n’est pas configurée'
+        ),
+        '500': internalError
+      }
+    }
+  },
   '/auth/refresh': {
     post: {
       tags: ['Auth'],

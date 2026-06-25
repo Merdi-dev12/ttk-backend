@@ -8,6 +8,7 @@ import * as controller from './controller.js';
 import {
   changePasswordSchema,
   emailSchema,
+  googleLoginSchema,
   loginSchema,
   refreshSchema,
   registerSchema,
@@ -48,6 +49,12 @@ router.post(
   authLimiter,
   validate({ body: loginSchema }),
   catchAsync(controller.login)
+);
+router.post(
+  '/google',
+  authLimiter,
+  validate({ body: googleLoginSchema }),
+  catchAsync(controller.googleLogin)
 );
 router.post(
   '/refresh',

@@ -3,6 +3,7 @@ import app from './app.js';
 import { closeDatabase } from './core/config/database.js';
 import { config } from './core/config/env.js';
 import { closeRedis } from './core/config/redis.js';
+import { warmGoogleAuth } from './modules/auth/google.service.js';
 
 let server: Server | undefined;
 
@@ -30,6 +31,9 @@ server = app.listen(config.port, config.host, () => {
   console.info(
     `Swagger UI available on http://localhost:${config.port}/api-docs`
   );
+  void warmGoogleAuth()
+    .then(() => console.info('Google signing certificates cached'))
+    .catch(() => console.warn('Google certificate prefetch failed'));
 });
 
 process.once('SIGINT', () => void shutdown('SIGINT'));

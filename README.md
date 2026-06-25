@@ -199,6 +199,10 @@ identifiants SMTP. Les principaux groupes sont :
 - donnees : `DATABASE_URL`, `REDIS_URL`, `MEILI_HOST`;
 - securite : `JWT_SECRET`, durees OTP/JWT;
 - email : `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`;
+- identité email : `MAIL_FROM_NAME`, `MAIL_BRAND_NAME`, `MAIL_LOGO_URL`,
+  `MAIL_SUPPORT_EMAIL`, `FRONTEND_URL`;
+- Google Login React : `GOOGLE_CLIENT_ID` uniquement côté backend; le même
+  identifiant public est exposé au front via `VITE_GOOGLE_CLIENT_ID`;
 - admin initial : `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
 
 Ne jamais versionner `.env`.
@@ -223,3 +227,5 @@ src/
 ```
 
 Les imports locaux utilisent toujours l'extension compilee `.js`.
+Le contrat React complet pour l'authentification classique et Google se trouve
+dans [`FRONTEND_AUTH_INTEGRATION.md`](./FRONTEND_AUTH_INTEGRATION.md).

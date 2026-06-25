@@ -9,6 +9,7 @@ const envSchema = Joi.object({
   PORT: Joi.number().port().default(3000),
   API_PREFIX: Joi.string().pattern(/^\/[a-zA-Z0-9/_-]*$/).default('/api/v1'),
   CORS_ORIGIN: Joi.string().default('*'),
+  FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
   DATABASE_URL: Joi.string().empty('').optional(),
   REDIS_URL: Joi.string().empty('').optional(),
   MEILI_HOST: Joi.string().empty('').optional(),
@@ -38,6 +39,13 @@ const envSchema = Joi.object({
   SMTP_USER: Joi.string().empty('').optional(),
   SMTP_PASS: Joi.string().empty('').optional(),
   MAIL_FROM: Joi.string().email().empty('').optional(),
+  MAIL_FROM_NAME: Joi.string().min(2).max(100).default('TTK Services'),
+  MAIL_BRAND_NAME: Joi.string().min(2).max(100).default('TTK Services'),
+  MAIL_LOGO_URL: Joi.string().uri().empty('').optional(),
+  MAIL_SUPPORT_EMAIL: Joi.string().email().empty('').optional(),
+  GOOGLE_CLIENT_ID: Joi.string()
+    .pattern(/^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$/)
+    .empty('').optional(),
   ADMIN_EMAIL: Joi.string().email().empty('').optional(),
   ADMIN_NAME: Joi.string().min(2).max(100).empty('').optional(),
   ADMIN_PASSWORD: Joi.string().min(8).max(72).empty('').optional()
@@ -60,6 +68,7 @@ const env = value as {
   PORT: number;
   API_PREFIX: string;
   CORS_ORIGIN: string;
+  FRONTEND_URL: string;
   DATABASE_URL?: string;
   REDIS_URL?: string;
   MEILI_HOST?: string;
@@ -86,6 +95,11 @@ const env = value as {
   SMTP_USER?: string;
   SMTP_PASS?: string;
   MAIL_FROM?: string;
+  MAIL_FROM_NAME: string;
+  MAIL_BRAND_NAME: string;
+  MAIL_LOGO_URL?: string;
+  MAIL_SUPPORT_EMAIL?: string;
+  GOOGLE_CLIENT_ID?: string;
   ADMIN_EMAIL?: string;
   ADMIN_NAME?: string;
   ADMIN_PASSWORD?: string;
@@ -97,6 +111,7 @@ export const config = Object.freeze({
   port: env.PORT,
   apiPrefix: env.API_PREFIX,
   corsOrigin: env.CORS_ORIGIN,
+  frontendUrl: env.FRONTEND_URL,
   databaseUrl: env.DATABASE_URL,
   redisUrl: env.REDIS_URL,
   meilisearch: {
@@ -130,7 +145,14 @@ export const config = Object.freeze({
     user: env.SMTP_USER,
     password: env.SMTP_PASS,
     from: env.MAIL_FROM,
+    fromName: env.MAIL_FROM_NAME,
+    brandName: env.MAIL_BRAND_NAME,
+    logoUrl: env.MAIL_LOGO_URL,
+    supportEmail: env.MAIL_SUPPORT_EMAIL,
     adminEmail: env.ADMIN_EMAIL
+  },
+  google: {
+    clientId: env.GOOGLE_CLIENT_ID
   },
   adminBootstrap: {
     name: env.ADMIN_NAME,

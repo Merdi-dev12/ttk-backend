@@ -15,6 +15,7 @@ services:
       PORT: ${PORT:-3000}
       API_PREFIX: ${API_PREFIX:-/api/v1}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       DATABASE_URL: postgresql://${DB_USER:-ttk_admin}:${DB_PASSWORD:-change-me}@postgres:5432/${DB_NAME:-ttk_db}
       REDIS_URL: redis://:${REDIS_PASSWORD:-change-me}@redis:6379
       MEILI_HOST: http://meilisearch:7700
@@ -36,6 +37,7 @@ services:
       ADMIN_NAME: ${ADMIN_NAME}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,6 +73,11 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       MAIL_FROM: ${MAIL_FROM}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-TTK Services}
+      MAIL_BRAND_NAME: ${MAIL_BRAND_NAME:-TTK Services}
+      MAIL_LOGO_URL: ${MAIL_LOGO_URL}
+      MAIL_SUPPORT_EMAIL: ${MAIL_SUPPORT_EMAIL}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
     depends_on:
       redis:

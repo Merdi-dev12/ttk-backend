@@ -10,6 +10,7 @@ import {
   updateProfile as updateProfileService
 } from './profile.service.js';
 import * as authService from './service.js';
+import { loginWithGoogle } from './google.service.js';
 import {
   listSessions as listUserSessions,
   revokeSession as revokeUserSession
@@ -54,6 +55,12 @@ export const login: RequestHandler = async (request, response) => {
     request.validated?.body as LoginInput,
     sessionMetadata(request)
   );
+  response.json({ status: 'success', data });
+};
+
+export const googleLogin: RequestHandler = async (request, response) => {
+  const { credential } = request.validated?.body as { credential: string };
+  const data = await loginWithGoogle(credential, sessionMetadata(request));
   response.json({ status: 'success', data });
 };
 

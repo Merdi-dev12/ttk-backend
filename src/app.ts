@@ -17,12 +17,21 @@ import storageRoutes from './modules/storage/routes.js';
 import userRoutes from './modules/users/routes.js';
 
 const app: Application = express();
+const isCorsWildcard = config.corsOrigin === '*';
+const corsOrigins =
+  isCorsWildcard
+    ? true
+    : config.corsOrigin
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
 
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(
   cors({
-    origin: config.corsOrigin === '*' ? true : config.corsOrigin
+    origin: corsOrigins,
+    credentials: !isCorsWildcard
   })
 );
 app.use(express.json({ limit: '1mb' }));

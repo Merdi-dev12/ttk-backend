@@ -6,11 +6,7 @@ import { config } from '../../core/config/env.js';
 import { enqueueOtpEmail } from '../../core/queues/email.queue.js';
 import type { UserRole } from '../../core/types/auth.js';
 import { AppError } from '../../core/utils/appError.js';
-import type {
-  LoginInput,
-  RegisterInput,
-  VerifyOtpInput
-} from './schema.js';
+import type { LoginInput, RegisterInput, VerifyOtpInput } from './schema.js';
 import type { PublicUser } from './profile.service.js';
 import {
   issueTokenPair,
@@ -222,7 +218,7 @@ export async function login(
   refreshToken: string;
 }> {
   const pool = getDatabasePool();
-  const result = await pool.query<PublicUser & { password_hash: string }>(
+  const result = await pool.query<PublicUser & { password_hash: string | null }>(
     `SELECT id, nom, postnom, email, role, status, avatar_url,
             created_at, password_hash
      FROM users
@@ -231,7 +227,11 @@ export async function login(
   );
   const user = result.rows[0];
 
-  if (!user || !(await bcrypt.compare(input.password, user.password_hash))) {
+  if (
+    !user ||
+    !user.password_hash ||
+    !(await bcrypt.compare(input.password, user.password_hash))
+  ) {
     throw new AppError(
       401,
       'Email ou mot de passe incorrect',
@@ -364,13 +364,17 @@ export async function changePassword(
   newPassword: string
 ): Promise<void> {
   await withTransaction(async (client) => {
-    const result = await client.query<{ password_hash: string }>(
+    const result = await client.query<{ password_hash: string | null }>(
       'SELECT password_hash FROM users WHERE id = $1 FOR UPDATE',
       [userId]
     );
     const user = result.rows[0];
 
-    if (!user || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+    if (
+      !user ||
+      !user.password_hash ||
+      !(await bcrypt.compare(currentPassword, user.password_hash))
+    ) {
       throw new AppError(400, 'Mot de passe actuel incorrect', 'INVALID_PASSWORD');
     }
 

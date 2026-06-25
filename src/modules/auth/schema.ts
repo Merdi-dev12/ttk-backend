@@ -29,6 +29,10 @@ export const loginSchema = Joi.object({
   password: Joi.string().max(72).required()
 });
 
+export const googleLoginSchema = Joi.object({
+  credential: Joi.string().trim().min(100).max(5000).required()
+});
+
 export const refreshSchema = Joi.object({
   refreshToken: Joi.string().min(40).required()
 });
