@@ -109,6 +109,12 @@ admin.patch(
   validate({ params: idParamsSchema, body: statusSchema }),
   catchAsync(controller.updateProductStatus)
 );
+admin.delete(
+  '/products/:id',
+  validate({ params: idParamsSchema }),
+  catchAsync(controller.deleteProduct)
+);
+
 admin.post(
   '/products/:productId/images',
   validate({ params: productIdParamsSchema, body: imageSchema }),

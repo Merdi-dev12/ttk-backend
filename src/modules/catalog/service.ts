@@ -143,7 +143,42 @@ export async function getAdminService(id: string) {
 }
 
 export async function deleteService(id: string) {
-  return updateServiceStatus(id, 'DELETED');
+  const client = await getDatabasePool().connect();
+  await client.query('BEGIN');
+
+  try {
+    const serviceResult = await client.query(
+      'SELECT * FROM services WHERE id = $1',
+      [id]
+    );
+    const service = serviceResult.rows[0];
+
+    if (!service) {
+      throw new AppError(404, 'Service introuvable', 'SERVICE_NOT_FOUND');
+    }
+
+    const products = await client.query<{ id: string }>(
+      'SELECT id FROM products WHERE service_id = $1',
+      [id]
+    );
+    await client.query('DELETE FROM products WHERE service_id = $1', [id]);
+    await client.query('DELETE FROM services WHERE id = $1', [id]);
+    await client.query('COMMIT');
+
+    await Promise.all([
+      enqueueSearchSync({ type: 'UPSERT_SERVICE', id }),
+      ...products.rows.map((product) =>
+        enqueueSearchSync({ type: 'UPSERT_PRODUCT', id: product.id })
+      )
+    ]);
+
+    return service;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getPublicService(slug: string) {

@@ -381,3 +381,40 @@ export async function updateProductStatus(id: string, status: string) {
   await enqueueSearchSync({ type: 'UPSERT_PRODUCT', id });
   return product;
 }
+
+export async function deleteProduct(id: string) {
+  const client = await getDatabasePool().connect();
+  await client.query('BEGIN');
+
+  try {
+    const productResult = await client.query<{ id: string }>(
+      'SELECT id FROM products WHERE id = $1',
+      [id]
+    );
+    const product = productResult.rows[0];
+
+    if (!product) {
+      throw new AppError(404, 'Produit introuvable', 'PRODUCT_NOT_FOUND');
+    }
+
+    // Purge contrôlée (si pas de cascade DB)
+    await client.query('DELETE FROM modalities WHERE product_id = $1', [id]);
+    await client.query(
+      'DELETE FROM product_images WHERE product_id = $1',
+      [id]
+    );
+    await client.query('DELETE FROM products WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
+
+    await enqueueSearchSync({ type: 'UPSERT_PRODUCT', id });
+
+    return product;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+

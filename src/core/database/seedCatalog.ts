@@ -86,22 +86,6 @@ const services: ServiceSeed[] = [
   }
 ];
 
-const brandImages: Record<string, string> = {
-  'Netflix Premium': 'https://cdn.simpleicons.org/netflix/E50914',
-  'Spotify Famille': 'https://cdn.simpleicons.org/spotify/1DB954',
-  'YouTube Premium': 'https://cdn.simpleicons.org/youtube/FF0000',
-  'Canva Pro': 'https://cdn.simpleicons.org/canva/00C4CC',
-  'Microsoft 365': 'https://cdn.simpleicons.org/microsoft/5E5E5E',
-  'Adobe Creative Cloud': 'https://cdn.simpleicons.org/adobe/FF0000',
-  'Figma Professional': 'https://cdn.simpleicons.org/figma/F24E1E',
-  'Notion Plus': 'https://cdn.simpleicons.org/notion/000000',
-  'Slack Pro': 'https://cdn.simpleicons.org/slack/4A154B',
-  'Zoom Business': 'https://cdn.simpleicons.org/zoom/0B5CFF',
-  'Campagne Facebook': 'https://cdn.simpleicons.org/facebook/0866FF',
-  'Campagne Google Ads': 'https://cdn.simpleicons.org/googleads/4285F4'
-};
-
-// Requêtes ultra-ciblées pour de vrais visuels professionnels (Contextuels)
 const serviceQueries: Record<string, string> = {
   'Abonnements digitaux': 'digital-subscriptions-lifestyle',
   'Streaming et TV': 'home-theater-entertainment',
@@ -120,17 +104,23 @@ const serviceQueries: Record<string, string> = {
   'Finance et admin': 'accounting-finance-business'
 };
 
+// Requêtes contextuelles orientées "produit réel" et scènes de marque réelles (Fini les logos SVG froids)
 const productQueries: Record<string, string> = {
-  'Netflix Premium': 'person-watching-tv-cozy',
-  'Spotify Famille': 'family-listening-music-headphones',
-  'YouTube Premium': 'content-creator-video-editing',
-  'Canva Pro': 'graphic-designer-interface',
-  'Microsoft 365': 'business-professional-laptop-office',
-  'IPTV Standard': 'smart-tv-streaming-apps',
-  'IPTV Sport': 'sports-stadium-broadcast-tv',
-  'Prime Video': 'watching-movie-popcorn',
-  'Disney Plus': 'children-watching-cartoon-tv',
-  'Crunchyroll Mega Fan': 'anime-fan-watching-screen',
+  'Netflix Premium': 'netflix-app-on-smart-tv-screen-living-room',
+  'Spotify Famille': 'spotify-app-playing-on-smartphone-headphones',
+  'YouTube Premium': 'youtube-videos-interface-on-laptop-screen',
+  'Canva Pro': 'canva-design-software-interface-on-computer',
+  'Microsoft 365': 'microsoft-office-word-excel-laptop-office',
+  'IPTV Standard': 'smart-tv-streaming-channels-remote-control',
+  'IPTV Sport': 'live-football-match-television-screen',
+  'Prime Video': 'prime-video-streaming-movie-night',
+  'Disney Plus': 'disney-plus-streaming-family-watching-tv',
+  'Crunchyroll Mega Fan': 'anime-streaming-on-tablet-laptop',
+  'Adobe Creative Cloud': 'photoshop-premiere-pro-editing-software-workspace',
+  'Figma Professional': 'figma-ui-ux-design-software-on-screen',
+  'Notion Plus': 'notion-workspace-app-productivity-laptop',
+  'Slack Pro': 'slack-chat-app-business-communication-screen',
+  'Zoom Business': 'zoom-video-call-conference-online-meeting',
   'Annonce appartement': 'bright-modern-apartment-living-room',
   'Annonce maison': 'luxury-suburban-house-exterior',
   'Visite photo pro': 'interior-photographer-camera-tripod',
@@ -152,8 +142,8 @@ const productQueries: Record<string, string> = {
   'Banniere sociale': 'social-media-post-layout-design',
   'Catalogue PDF': 'digital-magazine-tablet-mockup',
   'Audit reseaux sociaux': 'social-media-strategy-analytics',
-  'Campagne Facebook': 'facebook-advertising-dashboard',
-  'Campagne Google Ads': 'google-search-ads-management',
+  'Campagne Facebook': 'facebook-advertising-dashboard-ads',
+  'Campagne Google Ads': 'google-search-ads-management-analytics',
   'Calendrier editorial': 'content-planner-calendar-desk',
   'Landing page': 'web-design-ui-ux-landing-page',
   'Cartes de visite': 'premium-business-cards-mockup',
@@ -169,7 +159,7 @@ const productQueries: Record<string, string> = {
   'Installation Windows': 'operating-system-installation-screen',
   'Nettoyage PC': 'cleaning-dust-pc-components',
   'Sauvegarde donnees': 'external-hard-drive-backup-data',
-  'Configuration reseau': 'it-engineer-configuring-wi-fi-router',
+  'Configuration réseau': 'it-engineer-configuring-wi-fi-router',
   'Support mensuel': 'remote-desktop-technical-support',
   'Reservation hotel': 'luxury-hotel-room-bed-resort',
   'Assurance voyage': 'travel-insurance-policy-passport',
@@ -188,17 +178,9 @@ const productQueries: Record<string, string> = {
   'Conseil business': 'business-consultant-meeting-strategy'
 };
 
-/**
- * Génère des URLs Unsplash prêtes pour le responsive (grâce à l'API imgix intégrée d'Unsplash).
- * En ne spécifiant pas de `w` (width) ou `h` (height) figés dans l'URL de base, 
- * vous permettez à votre Front-End (ex: via la balise HTML <img srcset="..." />) 
- * d'ajouter dynamiquement les tailles requises sans perte de qualité.
- */
 function stockImage(query: string, sig: number): string {
   const cleanQuery = encodeURIComponent(query.replace(/ /g, '-'));
-  // auto=format : choisit automatiquement le meilleur format (ex: AVIF ou WebP pour le web)
-  // q=85 : Haute qualité d'image avec une excellente compression pour les performances web
-  // fit=crop : S'assure que l'image remplit la zone sans se déformer
+  // Paramètres optimisés pour le web réactif et la fidélité visuelle
   return `https://images.unsplash.com/photo-${sig}?auto=format,compress&q=85&fit=crop&crop=entropy&sig=${sig}&q=keyword&w=1200&q=${cleanQuery}`;
 }
 
@@ -208,12 +190,11 @@ function mediaForProduct(
   serviceIndex: number,
   productIndex: number
 ) {
-  const baseSig = 1500000000000 + (serviceIndex * 10000) + (productIndex * 500); // Génère de faux IDs d'images uniques et stables
+  const baseSig = 1500000000000 + (serviceIndex * 10000) + (productIndex * 500);
   const query = productQueries[productName] ?? `${productName} ${serviceName}`;
-  const primary = brandImages[productName] ?? stockImage(query, baseSig);
 
   return [
-    { url: primary, isPrimary: true, displayOrder: 0 },
+    { url: stockImage(query, baseSig), isPrimary: true, displayOrder: 0 },
     { url: stockImage(query, baseSig + 1), isPrimary: false, displayOrder: 1 },
     {
       url: stockImage(serviceQueries[serviceName] ?? serviceName, baseSig + 2),
@@ -316,4 +297,4 @@ async function seed(): Promise<void> {
 seed().catch((error) => {
   console.error('Catalog seed failed', error);
   process.exit(1);
-})
+});

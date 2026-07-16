@@ -191,7 +191,14 @@ export const updateProductStatus: RequestHandler = async (
   response.json({ status: 'success', data: { product } });
 };
 
+export const deleteProduct: RequestHandler = async (request, response) => {
+  const { id } = request.validated?.params as IdParams;
+  const product = await productService.deleteProduct(id);
+  response.json({ status: 'success', data: { product } });
+};
+
 export const addImage: RequestHandler = async (request, response) => {
+
   const { productId } = request.validated?.params as ProductIdParams;
   const image = await optionService.addImage(
     productId,
