@@ -24,11 +24,24 @@ jobs:
             # 1. Se positionner dans le dossier de prod
             cd /var/www/ttk-services
             
-            # 2. Nettoyer et forcer l'alignement parfait avec GitHub
+            # 2. Sécuriser la CD : Forcer l'alignement avec GitHub sans conflit
             git fetch --all
             git reset --hard origin/main
             git clean -df
             
-            # 3. Lancer l'orchestration Docker Compose
-            # Le flag --build recrée l'image de ton API et de tes workers
+            # 3. Relancer l'orchestration Docker Compose (Reconstruit les images de prod)
             docker compose up -d --build
+            
+            # 4. Exécuter les scripts de base de données et d'indexation en production
+            # Le flag -T est requis pour s'exécuter correctement dans l'environnement non-interactif de GitHub Actions
+            
+            echo "Exécution des migrations SQL..."
+            docker compose exec -T api npm run db:migrate
+            
+            echo "Seeding du catalogue..."
+            docker compose exec -T api npm run db:seed:catalog
+            
+            echo "Réindexation Meilisearch..."
+            docker compose exec -T api npm run search:reindex
+            
+            echo "✅ Déploiement et initialisation réussis avec succès !"
