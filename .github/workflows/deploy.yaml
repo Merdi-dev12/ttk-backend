@@ -33,15 +33,15 @@ jobs:
             docker compose up -d --build
             
             # 4. Exécuter les scripts de base de données et d'indexation en production
-            # Le flag -T est requis pour s'exécuter correctement dans l'environnement non-interactif de GitHub Actions
+            # On utilise les scripts prod: compilés en JavaScript natif
             
-            echo "Exécution des migrations SQL..."
-            docker compose exec -T api npm run db:migrate
+            echo "🗄️ Exécution des migrations SQL..."
+            docker compose exec -T api npm run prod:db:migrate
             
-            echo "Seeding du catalogue..."
-            docker compose exec -T api npm run db:seed:catalog
+            echo "🌱 Seeding du catalogue..."
+            docker compose exec -T api npm run prod:db:seed:catalog
             
-            echo "Réindexation Meilisearch..."
-            docker compose exec -T api npm run search:reindex
+            echo "🔍 Réindexation Meilisearch..."
+            docker compose exec -T api npm run prod:search:reindex
             
             echo "✅ Déploiement et initialisation réussis avec succès !"
