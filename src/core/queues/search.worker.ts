@@ -8,6 +8,7 @@ import {
   searchTaskWaitOptions,
   type CatalogSearchDocument
 } from '../search/catalogSearch.js';
+import { logger } from '../utils/logger.js';
 import type { SearchJob } from './search.queue.js';
 
 const client = getMeilisearchClient();
@@ -163,7 +164,11 @@ const worker = new Worker<SearchJob>(
 );
 
 worker.on('failed', (job, error) => {
-  console.error(`Search job failed: ${job?.id}`, error);
+  logger.error('search_job_failed', {
+    jobId: job?.id,
+    jobType: job?.data.type,
+    error
+  });
 });
 
 async function shutdown(): Promise<void> {
@@ -175,4 +180,4 @@ async function shutdown(): Promise<void> {
 process.once('SIGINT', () => void shutdown());
 process.once('SIGTERM', () => void shutdown());
 
-console.info('Catalog search worker started');
+logger.info('catalog_search_worker_started');

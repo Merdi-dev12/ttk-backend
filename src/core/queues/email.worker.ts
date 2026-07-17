@@ -10,10 +10,11 @@ import {
   renderOtpEmail,
   renderTestEmail
 } from '../email/templates.js';
+import { logger } from '../utils/logger.js';
 import type { TransactionalEmailJob } from './email.queue.js';
 
 await verifyMailTransport();
-console.info('SMTP connection verified');
+logger.info('smtp_connection_verified');
 
 const worker = new Worker<TransactionalEmailJob>(
   'transactional-emails',
@@ -48,11 +49,15 @@ const worker = new Worker<TransactionalEmailJob>(
 );
 
 worker.on('completed', (job) => {
-  console.info(`Email job completed: ${job.id}`);
+  logger.info('email_job_completed', { jobId: job.id, jobType: job.data.type });
 });
 
 worker.on('failed', (job, error) => {
-  console.error(`Email job failed: ${job?.id}`, error);
+  logger.error('email_job_failed', {
+    jobId: job?.id,
+    jobType: job?.data.type,
+    error
+  });
 });
 
 async function shutdown(): Promise<void> {
@@ -63,4 +68,4 @@ async function shutdown(): Promise<void> {
 process.once('SIGINT', shutdown);
 process.once('SIGTERM', shutdown);
 
-console.info('Transactional email worker started');
+logger.info('transactional_email_worker_started');

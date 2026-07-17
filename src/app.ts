@@ -2,6 +2,7 @@ import cors from 'cors';
 import express, {
   type Application
 } from 'express';
+import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { config } from './core/config/env.js';
@@ -10,6 +11,8 @@ import {
   errorHandler,
   notFoundHandler
 } from './core/middlewares/error.middleware.js';
+import { requestLogger } from './core/middlewares/requestLogger.middleware.js';
+import { rejectSuspiciousRequests } from './core/middlewares/security.middleware.js';
 import authRoutes from './modules/auth/routes.js';
 import adminRoutes from './modules/admin/routes.js';
 import catalogRoutes from './modules/catalog/routes.js';
@@ -27,15 +30,35 @@ const corsOrigins =
         .filter(Boolean);
 
 app.disable('x-powered-by');
-app.use(helmet());
+app.set('trust proxy', config.trustProxy);
+app.use(requestLogger);
+app.use(rejectSuspiciousRequests);
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
+  })
+);
 app.use(
   cors({
     origin: corsOrigins,
-    credentials: !isCorsWildcard
+    credentials: !isCorsWildcard,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type', 'X-Request-Id'],
+    exposedHeaders: ['X-Request-Id', 'RateLimit', 'RateLimit-Policy'],
+    maxAge: 600
   })
 );
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(
+  config.apiPrefix,
+  rateLimit({
+    windowMs: config.globalRateLimit.windowMs,
+    limit: config.globalRateLimit.max,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false
+  })
+);
+app.use(express.json({ limit: config.requestBodyLimit }));
+app.use(express.urlencoded({ extended: true, limit: config.requestBodyLimit }));
 
 const swaggerHandler = swaggerUi.setup(openApiDocument, {
   customSiteTitle: 'TTK API Documentation'

@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { getDatabasePool } from '../../core/config/database.js';
 import { config } from '../../core/config/env.js';
+import { logger } from '../../core/utils/logger.js';
 
 async function createAdmin(): Promise<void> {
   const { name, email, password } = config.adminBootstrap;
@@ -42,17 +43,17 @@ async function createAdmin(): Promise<void> {
          WHERE user_id = $1 AND revoked_at IS NULL`,
         [admin.id]
       );
-      console.info(`Admin credentials updated: ${admin.id}`);
+      logger.info('admin_credentials_updated', { adminId: admin.id });
       return;
     }
 
     const result = await pool.query<{ id: string }>(
       `INSERT INTO users(nom, email, password_hash, role)
        VALUES ($1, $2, $3, 'ADMIN')
-       RETURNING id`,
+      RETURNING id`,
       [name, email, passwordHash]
     );
-    console.info(`Admin created: ${result.rows[0]!.id}`);
+    logger.info('admin_created', { adminId: result.rows[0]!.id });
   } catch (error) {
     if (
       typeof error === 'object' &&
@@ -69,6 +70,6 @@ async function createAdmin(): Promise<void> {
 }
 
 createAdmin().catch((error) => {
-  console.error('Admin creation failed', error);
+  logger.error('admin_creation_failed', { error });
   process.exit(1);
 });

@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 import { getDatabasePool, closeDatabase } from '../config/database.js';
+import { logger } from '../utils/logger.js';
 import { createSlug } from '../utils/slug.js';
 
 type ServiceSeed = {
@@ -284,7 +285,11 @@ async function seed(): Promise<void> {
     }
 
     await client.query('COMMIT');
-    console.info('Seed catalogue termine: 15 services, 75 produits, 225 images.');
+    logger.info('catalog_seed_completed', {
+      services: 15,
+      products: 75,
+      images: 225
+    });
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -295,6 +300,6 @@ async function seed(): Promise<void> {
 }
 
 seed().catch((error) => {
-  console.error('Catalog seed failed', error);
+  logger.error('catalog_seed_failed', { error });
   process.exit(1);
 });

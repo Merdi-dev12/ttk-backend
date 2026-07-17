@@ -1,5 +1,6 @@
 import { enqueueSearchSync } from '../queues/search.queue.js';
+import { logger } from '../utils/logger.js';
 
 await enqueueSearchSync({ type: 'REINDEX_ALL' });
-console.info('Catalog reindex job queued');
+logger.info('catalog_reindex_job_queued');
 process.exit(0);

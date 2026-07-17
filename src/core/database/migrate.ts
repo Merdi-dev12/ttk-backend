@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { getDatabasePool } from '../config/database.js';
+import { logger } from '../utils/logger.js';
 
 const migrationsDirectory = path.join(
   process.cwd(),
@@ -44,7 +45,7 @@ async function migrate(): Promise<void> {
           [file]
         );
         await client.query('COMMIT');
-        console.info(`Applied migration: ${file}`);
+        logger.info('migration_applied', { file });
       } catch (error) {
         await client.query('ROLLBACK');
         throw error;
@@ -57,6 +58,6 @@ async function migrate(): Promise<void> {
 }
 
 migrate().catch((error) => {
-  console.error('Migration failed', error);
+  logger.error('migration_failed', { error });
   process.exit(1);
 });

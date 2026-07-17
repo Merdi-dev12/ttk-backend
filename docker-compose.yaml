@@ -10,6 +10,7 @@ services:
       - "${PORT:-3000}:3000"
     environment:
       NODE_ENV: production
+      APP_ROLE: api
       HOST: 0.0.0.0
       PORT: 3000
       API_PREFIX: ${API_PREFIX:-/api/v1}
@@ -27,6 +28,7 @@ services:
       STORAGE_FORCE_PATH_STYLE: "true"
       STORAGE_PUBLIC_BASE_URL: ${STORAGE_PUBLIC_BASE_URL}
       STORAGE_MAX_FILE_SIZE_MB: ${STORAGE_MAX_FILE_SIZE_MB}
+      STORAGE_MAX_VIDEO_SIZE_MB: ${STORAGE_MAX_VIDEO_SIZE_MB}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_TTL: ${JWT_ACCESS_TTL}
       JWT_REFRESH_TTL_DAYS: ${JWT_REFRESH_TTL_DAYS}
@@ -37,6 +39,12 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-http}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      REQUEST_BODY_LIMIT: ${REQUEST_BODY_LIMIT:-1mb}
+      GLOBAL_RATE_LIMIT_WINDOW_MS: ${GLOBAL_RATE_LIMIT_WINDOW_MS:-900000}
+      GLOBAL_RATE_LIMIT_MAX: ${GLOBAL_RATE_LIMIT_MAX:-300}
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,9 +66,10 @@ services:
     build:
       context: .
       target: production
-    command: ["npm", "run", "worker:email"]
+    command: ["node", "dist/core/queues/email.worker.js"]
     environment:
       NODE_ENV: production
+      APP_ROLE: email-worker
       REDIS_URL: ${REDIS_URL}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -72,6 +81,8 @@ services:
       MAIL_BRAND_NAME: ${MAIL_BRAND_NAME}
       FRONTEND_URL: ${FRONTEND_URL}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
     depends_on:
       redis:
         condition: service_healthy
@@ -81,13 +92,16 @@ services:
     build:
       context: .
       target: production
-    command: ["npm", "run", "worker:search"]
+    command: ["node", "dist/core/queues/search.worker.js"]
     environment:
       NODE_ENV: production
+      APP_ROLE: search-worker
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       MEILI_HOST: http://meilisearch:7700
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
     depends_on:
       postgres:
         condition: service_healthy
