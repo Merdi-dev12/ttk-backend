@@ -1,6 +1,6 @@
 import util from 'node:util';
 import winston from 'winston';
-import { config } from '../config/env.ts';
+import { config } from '../config/env.js';
 
 const sensitiveKeyPattern =
   /authorization|cookie|password|secret|token|otp|api[-_]?key|access[-_]?key|refresh/i;
