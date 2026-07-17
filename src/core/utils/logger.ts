@@ -1,6 +1,6 @@
 import util from 'node:util';
 import winston from 'winston';
-import { config } from '../config/env.js';
+import { config } from '../config/env.js'; 
 
 const sensitiveKeyPattern =
   /authorization|cookie|password|secret|token|otp|api[-_]?key|access[-_]?key|refresh/i;
@@ -34,7 +34,18 @@ function redactValue(value: unknown, depth = 0): unknown {
   return value;
 }
 
-const redactFormat = winston.format((info) => redactValue(info) as winston.Logform.TransformableInfo);
+const redactFormat = winston.format((info) => {
+  const redacted = redactValue(info) as winston.Logform.TransformableInfo;
+  
+  redacted.level = info.level;
+  const levelSymbol = Symbol.for('level');
+  const messageSymbol = Symbol.for('message');
+  
+  if (info[levelSymbol]) redacted[levelSymbol] = info[levelSymbol];
+  if (info[messageSymbol]) redacted[messageSymbol] = info[messageSymbol];
+  
+  return redacted;
+});
 
 const prettyFormat = winston.format.printf((info) => {
   const { timestamp, level, message, ...meta } = info;
@@ -50,9 +61,9 @@ export const logger = winston.createLogger({
   level: config.log.level,
   levels: winston.config.npm.levels,
   format: winston.format.combine(
-    redactFormat(),
     winston.format.timestamp(),
     winston.format.errors({ stack: config.env !== 'production' }),
+    redactFormat(), 
     config.log.format === 'pretty'
       ? winston.format.combine(winston.format.colorize(), prettyFormat)
       : winston.format.json()
