@@ -1,6 +1,6 @@
 import util from 'node:util';
 import winston from 'winston';
-import { config } from '../config/env.js'; 
+import { config } from '../config/env.ts';
 
 const sensitiveKeyPattern =
   /authorization|cookie|password|secret|token|otp|api[-_]?key|access[-_]?key|refresh/i;
@@ -49,10 +49,14 @@ const redactFormat = winston.format((info) => {
 
 const prettyFormat = winston.format.printf((info) => {
   const { timestamp, level, message, ...meta } = info;
-  const suffix =
-    Object.keys(meta).length > 0
-      ? ` ${util.inspect(meta, { colors: true, depth: 6, breakLength: 120 })}`
-      : '';
+  
+  // Si c'est un log de requête HTTP ou s'il n'y a pas de métadonnées utiles, on reste sur une seule ligne
+  const hasMeta = Object.keys(meta).length > 0;
+  const isHttpLog = level.includes('http') || meta.method || meta.path;
+
+  const suffix = hasMeta && !isHttpLog
+    ? ` ${util.inspect(meta, { colors: true, depth: 6, breakLength: 120 })}`
+    : '';
 
   return `${timestamp} ${level}: ${message}${suffix}`;
 });
@@ -63,7 +67,7 @@ export const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: config.env !== 'production' }),
-    redactFormat(), 
+    redactFormat(),
     config.log.format === 'pretty'
       ? winston.format.combine(winston.format.colorize(), prettyFormat)
       : winston.format.json()
