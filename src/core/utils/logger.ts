@@ -1,6 +1,6 @@
 import util from 'node:util';
 import winston from 'winston';
-import { config } from '../config/env.js';
+import { config } from '../config/env.js'; 
 
 const sensitiveKeyPattern =
   /authorization|cookie|password|secret|token|otp|api[-_]?key|access[-_]?key|refresh/i;
@@ -49,12 +49,23 @@ const redactFormat = winston.format((info) => {
 
 const prettyFormat = winston.format.printf((info) => {
   const { timestamp, level, message, ...meta } = info;
-  
-  // Si c'est un log de requête HTTP ou s'il n'y a pas de métadonnées utiles, on reste sur une seule ligne
-  const hasMeta = Object.keys(meta).length > 0;
-  const isHttpLog = level.includes('http') || meta.method || meta.path;
 
-  const suffix = hasMeta && !isHttpLog
+  if (level.includes('http') || meta.method || meta.path) {
+    const method = meta.method || '';
+    const path = meta.path || '';
+    const statusCode = meta.statusCode || '';
+    const duration = meta.durationMs !== undefined ? `${meta.durationMs} ms` : '';
+    
+    const msgString = typeof message === 'string' ? message : '';
+
+    const logLine = msgString && msgString !== 'http_request' 
+      ? msgString 
+      : `${method} ${path} ${statusCode} - ${duration}`;
+      
+    return `${timestamp} ${level}: ${logLine.trim()}`;
+  }
+
+  const suffix = Object.keys(meta).length > 0
     ? ` ${util.inspect(meta, { colors: true, depth: 6, breakLength: 120 })}`
     : '';
 
