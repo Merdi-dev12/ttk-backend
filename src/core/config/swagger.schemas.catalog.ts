@@ -55,7 +55,15 @@ export const catalogSchemas = {
         nullable: true,
         example: 'https://cdn.example.com/services/subscriptions.jpg'
       },
-      type: { type: 'string', enum: ['PRODUCTS', 'FORM'], example: 'PRODUCTS' }
+      type: { type: 'string', enum: ['PRODUCTS', 'FORM'], example: 'PRODUCTS' },
+      orderFlow: {
+        type: 'string',
+        enum: ['DIRECT_PAYMENT', 'ORDER_REQUEST'],
+        default: 'ORDER_REQUEST',
+        example: 'DIRECT_PAYMENT',
+        description:
+          'DIRECT_PAYMENT affiche un parcours payer maintenant. ORDER_REQUEST affiche un parcours reservation/commande.'
+      }
     }
   },
   ServiceUpdateRequest: {
@@ -64,7 +72,11 @@ export const catalogSchemas = {
     properties: {
       name: { type: 'string', minLength: 2, maxLength: 100, example: 'Streaming' },
       description: { ...nullableText, maxLength: 5000 },
-      imageUrl: { type: 'string', format: 'uri', nullable: true }
+      imageUrl: { type: 'string', format: 'uri', nullable: true },
+      orderFlow: {
+        type: 'string',
+        enum: ['DIRECT_PAYMENT', 'ORDER_REQUEST']
+      }
     }
   },
   CatalogStatusRequest: {
@@ -83,6 +95,7 @@ export const catalogSchemas = {
       description: nullableText,
       image_url: { type: 'string', format: 'uri', nullable: true },
       type: { type: 'string', enum: ['PRODUCTS', 'FORM'] },
+      orderFlow: { type: 'string', enum: ['DIRECT_PAYMENT', 'ORDER_REQUEST'] },
       status: { type: 'string', enum: ['ACTIVE', 'SUSPENDED', 'DELETED'] },
       created_at: dateTime,
       updated_at: dateTime,
@@ -290,6 +303,18 @@ export const catalogSchemas = {
       status: { type: 'string', enum: ['ACTIVE', 'SUSPENDED', 'DELETED'] },
       created_at: dateTime,
       updated_at: dateTime,
+      service: {
+        type: 'object',
+        properties: {
+          id: uuid,
+          name: { type: 'string' },
+          slug: { type: 'string' },
+          orderFlow: {
+            type: 'string',
+            enum: ['DIRECT_PAYMENT', 'ORDER_REQUEST']
+          }
+        }
+      },
       images: { type: 'array', items: { $ref: '#/components/schemas/ProductImage' } },
       modalities: { type: 'array', items: { $ref: '#/components/schemas/ProductModality' } }
     }

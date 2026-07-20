@@ -6,6 +6,7 @@ import {
 
 const uuid = Joi.string().uuid().required();
 const status = Joi.string().valid('ACTIVE', 'SUSPENDED', 'DELETED');
+const orderFlow = Joi.string().valid('DIRECT_PAYMENT', 'ORDER_REQUEST');
 const url = Joi.string().uri().max(2048);
 
 export const idParamsSchema = Joi.object({ id: uuid });
@@ -40,6 +41,7 @@ export const adminServicesQuerySchema = Joi.object({
   ...dataTableFields,
   status: status.optional(),
   type: Joi.string().valid('PRODUCTS', 'FORM').optional(),
+  orderFlow: orderFlow.optional(),
   sortBy: Joi.string()
     .valid('name', 'type', 'status', 'created_at', 'updated_at')
     .default('created_at'),
@@ -64,13 +66,15 @@ export const createServiceSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100).required(),
   description: Joi.string().trim().max(5000).allow(null, '').optional(),
   imageUrl: url.allow(null, '').optional(),
-  type: Joi.string().valid('PRODUCTS', 'FORM').required()
+  type: Joi.string().valid('PRODUCTS', 'FORM').required(),
+  orderFlow: orderFlow.default('ORDER_REQUEST')
 });
 
 export const updateServiceSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100),
   description: Joi.string().trim().max(5000).allow(null, ''),
-  imageUrl: url.allow(null, '')
+  imageUrl: url.allow(null, ''),
+  orderFlow
 }).min(1);
 
 export const statusSchema = Joi.object({ status: status.required() });

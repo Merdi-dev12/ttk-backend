@@ -182,6 +182,11 @@ router.get(
   catchAsync(controller.getPublicService)
 );
 router.get(
+  '/products/:id/reviews',
+  validate({ params: idParamsSchema }),
+  catchAsync(controller.listPublicProductReviews)
+);
+router.get(
   '/products/:id',
   validate({ params: idParamsSchema }),
   catchAsync(controller.getPublicProduct)

@@ -4,7 +4,12 @@ import { requireRole } from '../../core/middlewares/role.middleware.js';
 import { validate } from '../../core/middlewares/validate.middleware.js';
 import { catchAsync } from '../../core/utils/catchAsync.js';
 import * as controller from './controller.js';
-import { dashboardQuerySchema } from './schema.js';
+import * as notificationsController from './notifications.controller.js';
+import {
+  dashboardQuerySchema,
+  notificationParamsSchema,
+  notificationsQuerySchema
+} from './schema.js';
 import * as settingsController from './settings.controller.js';
 import {
   settingsSchemas,
@@ -20,6 +25,18 @@ router.get(
   catchAsync(controller.summary)
 );
 router.get('/dashboard/activity', catchAsync(controller.activity));
+router.get(
+  '/notifications',
+  validate({ query: notificationsQuerySchema }),
+  catchAsync(notificationsController.list)
+);
+router.get('/notifications/unread-count', catchAsync(notificationsController.unreadCount));
+router.patch(
+  '/notifications/:id/read',
+  validate({ params: notificationParamsSchema }),
+  catchAsync(notificationsController.markRead)
+);
+router.patch('/notifications/read-all', catchAsync(notificationsController.markAllRead));
 router.get('/settings', catchAsync(settingsController.getSettings));
 
 for (const section of Object.keys(settingsSchemas) as Array<

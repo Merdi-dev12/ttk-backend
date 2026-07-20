@@ -1,6 +1,7 @@
 import cors from 'cors';
 import express, {
-  type Application
+  type Application,
+  type Request
 } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -16,8 +17,10 @@ import { rejectSuspiciousRequests } from './core/middlewares/security.middleware
 import authRoutes from './modules/auth/routes.js';
 import adminRoutes from './modules/admin/routes.js';
 import catalogRoutes from './modules/catalog/routes.js';
+import contactRoutes from './modules/contact/routes.js';
 import storageRoutes from './modules/storage/routes.js';
 import userRoutes from './modules/users/routes.js';
+import webhookRoutes from './modules/webhooks/routes.js';
 
 const app: Application = express();
 const isCorsWildcard = config.corsOrigin === '*';
@@ -57,7 +60,12 @@ app.use(
     legacyHeaders: false
   })
 );
-app.use(express.json({ limit: config.requestBodyLimit }));
+app.use(express.json({
+  limit: config.requestBodyLimit,
+  verify: (request, _response, buffer) => {
+    (request as Request).rawBody = Buffer.from(buffer);
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: config.requestBodyLimit }));
 
 const swaggerHandler = swaggerUi.setup(openApiDocument, {
@@ -79,6 +87,8 @@ app.get(`${config.apiPrefix}/health`, (_request, response) => {
 });
 
 app.use(`${config.apiPrefix}/auth`, authRoutes);
+app.use(`${config.apiPrefix}/contact`, contactRoutes);
+app.use(`${config.apiPrefix}/webhooks`, webhookRoutes);
 app.use(`${config.apiPrefix}/admin`, adminRoutes);
 app.use(`${config.apiPrefix}/catalog`, catalogRoutes);
 app.use(`${config.apiPrefix}/storage/admin`, storageRoutes);

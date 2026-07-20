@@ -13,7 +13,8 @@ export const mailBrand = {
   name: config.mail.brandName,
   logoUrl: config.mail.logoUrl,
   frontendUrl: config.frontendUrl,
-  supportEmail: config.mail.supportEmail
+  supportEmail: config.mail.supportEmail,
+  contactEmail: config.mail.contactEmail
 };
 
 export const mailFrom = {

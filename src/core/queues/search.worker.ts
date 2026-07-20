@@ -22,9 +22,10 @@ async function syncService(id: string): Promise<void> {
     slug: string;
     description: string | null;
     image_url: string | null;
+    order_flow: 'DIRECT_PAYMENT' | 'ORDER_REQUEST';
     status: string;
   }>(
-    `SELECT id, name, slug, description, image_url, status
+    `SELECT id, name, slug, description, image_url, order_flow, status
      FROM services WHERE id = $1`,
     [id]
   );
@@ -48,6 +49,7 @@ async function syncService(id: string): Promise<void> {
       slug: service.slug,
       description: service.description,
       imageUrl: service.image_url,
+      orderFlow: service.order_flow,
       serviceId: null,
       serviceName: null,
       minPrice: null,
@@ -67,6 +69,7 @@ async function syncProduct(id: string): Promise<void> {
     status: string;
     service_id: string;
     service_name: string;
+    service_order_flow: 'DIRECT_PAYMENT' | 'ORDER_REQUEST';
     service_status: string;
     image_url: string | null;
     min_price: string | null;
@@ -75,6 +78,7 @@ async function syncProduct(id: string): Promise<void> {
   }>(
     `SELECT p.id, p.name, p.slug, p.description, p.status,
             s.id AS service_id, s.name AS service_name,
+            s.order_flow AS service_order_flow,
             s.status AS service_status,
             (
               SELECT pi.url FROM product_images pi
@@ -119,6 +123,7 @@ async function syncProduct(id: string): Promise<void> {
       slug: product.slug,
       description: product.description,
       imageUrl: product.image_url,
+      orderFlow: product.service_order_flow,
       serviceId: product.service_id,
       serviceName: product.service_name,
       minPrice: product.min_price === null ? null : Number(product.min_price),

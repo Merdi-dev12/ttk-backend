@@ -11,6 +11,7 @@ export interface CatalogSearchDocument {
   slug: string;
   description: string | null;
   imageUrl: string | null;
+  orderFlow: 'DIRECT_PAYMENT' | 'ORDER_REQUEST';
   serviceId: string | null;
   serviceName: string | null;
   minPrice: number | null;
@@ -38,6 +39,7 @@ export async function configureCatalogIndex(): Promise<void> {
   ]);
   const filterableTask = await index.updateFilterableAttributes([
     'kind',
+    'orderFlow',
     'serviceId',
     'currencies'
   ]);

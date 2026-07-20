@@ -43,6 +43,14 @@ export const adminPaths = {
           name: 'type',
           in: 'query',
           schema: { type: 'string', enum: ['PRODUCTS', 'FORM'] }
+        },
+        {
+          name: 'orderFlow',
+          in: 'query',
+          schema: {
+            type: 'string',
+            enum: ['DIRECT_PAYMENT', 'ORDER_REQUEST']
+          }
         }
       ],
       responses: {

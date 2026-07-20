@@ -15,7 +15,15 @@ export interface TestEmailJob {
   platformName: string;
 }
 
-export type TransactionalEmailJob = OtpEmailJob | TestEmailJob;
+export interface ContactEmailJob {
+  type: 'CONTACT_MESSAGE';
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export type TransactionalEmailJob = OtpEmailJob | TestEmailJob | ContactEmailJob;
 
 type EmailQueue = Queue<
   TransactionalEmailJob,
@@ -57,5 +65,9 @@ export async function enqueueOtpEmail(data: OtpEmailJob): Promise<void> {
 }
 
 export async function enqueueTestEmail(data: TestEmailJob): Promise<void> {
+  await getEmailQueue().add(data.type, data);
+}
+
+export async function enqueueContactEmail(data: ContactEmailJob): Promise<void> {
   await getEmailQueue().add(data.type, data);
 }

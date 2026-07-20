@@ -53,6 +53,18 @@ export const getPublicProduct: RequestHandler = async (request, response) => {
   response.json({ status: 'success', data: { product } });
 };
 
+export const listPublicProductReviews: RequestHandler = async (
+  request,
+  response
+) => {
+  const { id } = request.validated?.params as IdParams;
+  const reviews = await productService.listPublicProductReviews(id, 6);
+  response.json({
+    status: 'success',
+    data: { reviews, total: reviews.length }
+  });
+};
+
 export const listAdminServices: RequestHandler = async (request, response) => {
   const data = await catalogService.listAdminServices(
     request.validated?.query as Parameters<

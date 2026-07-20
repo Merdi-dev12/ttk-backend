@@ -35,6 +35,13 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+  CREATE TYPE service_order_flow AS ENUM (
+    'DIRECT_PAYMENT', 'ORDER_REQUEST'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 CREATE TABLE IF NOT EXISTS pending_registrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nom VARCHAR(100) NOT NULL,
@@ -94,6 +101,7 @@ CREATE TABLE IF NOT EXISTS services (
   description TEXT,
   image_url VARCHAR(2048),
   type service_type NOT NULL,
+  order_flow service_order_flow NOT NULL DEFAULT 'ORDER_REQUEST',
   status catalog_status NOT NULL DEFAULT 'ACTIVE',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

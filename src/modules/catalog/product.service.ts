@@ -6,6 +6,62 @@ import { paginationResult } from '../../core/utils/pagination.js';
 import { createSlug } from '../../core/utils/slug.js';
 import type { ImageInput, ModalityInput } from './option.service.js';
 
+export interface ProductReview {
+  id: string;
+  productId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+const fakeProductReviews: Omit<ProductReview, 'id' | 'productId'>[] = [
+  {
+    userName: 'Mariam K.',
+    rating: 5,
+    comment: 'Service rapide, réponse claire et produit livré sans mauvaise surprise.',
+    createdAt: '2026-07-12T09:30:00.000Z'
+  },
+  {
+    userName: 'Patrick M.',
+    rating: 4,
+    comment: 'Très bonne expérience. Le suivi WhatsApp m’a aidé à finaliser vite.',
+    createdAt: '2026-07-10T14:15:00.000Z'
+  },
+  {
+    userName: 'Aminata B.',
+    rating: 5,
+    comment: 'Prix clair, devise affichée correctement et commande confirmée rapidement.',
+    createdAt: '2026-07-08T11:05:00.000Z'
+  },
+  {
+    userName: 'Junior L.',
+    rating: 4,
+    comment: 'Produit conforme aux informations. Je recommande pour le sérieux.',
+    createdAt: '2026-07-05T16:40:00.000Z'
+  },
+  {
+    userName: 'Grâce N.',
+    rating: 5,
+    comment: 'Interface simple et équipe disponible pour expliquer les détails.',
+    createdAt: '2026-07-02T08:20:00.000Z'
+  },
+  {
+    userName: 'David S.',
+    rating: 5,
+    comment: 'Commande traitée proprement, avec un bon accompagnement.',
+    createdAt: '2026-06-29T18:10:00.000Z'
+  }
+];
+
+export async function listPublicProductReviews(productId: string, limit = 6) {
+  return fakeProductReviews.slice(0, limit).map((review, index) => ({
+    ...review,
+    id: `fake_review_${index + 1}`,
+    productId
+  }));
+}
+
 async function assertProductService(
   client: PoolClient,
   serviceId: string
@@ -230,9 +286,10 @@ export async function listAllAdminProducts(input: AdminProductsInput) {
   const orderBy = sortColumns[input.sortBy];
   const direction = input.sortOrder === 'asc' ? 'ASC' : 'DESC';
   const result = await getDatabasePool().query(
-    `SELECT ${productSelection}, p.admin_note,
+            `SELECT ${productSelection}, p.admin_note,
             jsonb_build_object(
-              'id', s.id, 'name', s.name, 'slug', s.slug
+              'id', s.id, 'name', s.name, 'slug', s.slug,
+              'orderFlow', s.order_flow
             ) AS service,
             (
               SELECT jsonb_build_object(
@@ -298,7 +355,11 @@ export async function listAllAdminProducts(input: AdminProductsInput) {
 
 export async function getPublicProduct(id: string) {
   const result = await getDatabasePool().query(
-    `SELECT ${productSelection}
+    `SELECT ${productSelection},
+            jsonb_build_object(
+              'id', s.id, 'name', s.name, 'slug', s.slug,
+              'orderFlow', s.order_flow
+            ) AS service
      FROM products p
      JOIN services s ON s.id = p.service_id
      WHERE p.id = $1
@@ -315,8 +376,13 @@ export async function getPublicProduct(id: string) {
 
 export async function getAdminProduct(id: string) {
   const result = await getDatabasePool().query(
-    `SELECT ${productSelection}, p.admin_note
+    `SELECT ${productSelection}, p.admin_note,
+            jsonb_build_object(
+              'id', s.id, 'name', s.name, 'slug', s.slug,
+              'orderFlow', s.order_flow
+            ) AS service
      FROM products p
+     JOIN services s ON s.id = p.service_id
      WHERE p.id = $1`,
     [id]
   );
@@ -417,4 +483,3 @@ export async function deleteProduct(id: string) {
     client.release();
   }
 }
-

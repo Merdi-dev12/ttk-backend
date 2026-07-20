@@ -57,6 +57,14 @@ const envSchema = Joi.object({
   MAIL_BRAND_NAME: Joi.string().min(2).max(100).default('TTK Services'),
   MAIL_LOGO_URL: Joi.string().uri().empty('').optional(),
   MAIL_SUPPORT_EMAIL: Joi.string().email().empty('').optional(),
+  CONTACT_TO_EMAIL: Joi.string().email().empty('').optional(),
+  RESEND_API_KEY: Joi.string().empty('').optional(),
+  RESEND_WEBHOOK_SECRET: Joi.string().empty('').optional(),
+  RESEND_FROM_EMAIL: Joi.string().email().default('noreply@ttk-services.agency'),
+  RESEND_INBOUND_CONTACT_EMAIL: Joi.string()
+    .email()
+    .default('contact@ttk-services.agency'),
+  RESEND_NOTIFICATION_TO_EMAIL: Joi.string().email().empty('').optional(),
   GOOGLE_CLIENT_ID: Joi.string()
     .pattern(/^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$/)
     .empty('').optional(),
@@ -121,6 +129,12 @@ const env = value as {
   MAIL_BRAND_NAME: string;
   MAIL_LOGO_URL?: string;
   MAIL_SUPPORT_EMAIL?: string;
+  CONTACT_TO_EMAIL?: string;
+  RESEND_API_KEY?: string;
+  RESEND_WEBHOOK_SECRET?: string;
+  RESEND_FROM_EMAIL: string;
+  RESEND_INBOUND_CONTACT_EMAIL: string;
+  RESEND_NOTIFICATION_TO_EMAIL?: string;
   GOOGLE_CLIENT_ID?: string;
   ADMIN_EMAIL?: string;
   ADMIN_NAME?: string;
@@ -160,7 +174,8 @@ function assertProductionSecurity(): void {
       ['SMTP_HOST', env.SMTP_HOST],
       ['SMTP_USER', env.SMTP_USER],
       ['SMTP_PASS', env.SMTP_PASS],
-      ['MAIL_FROM', env.MAIL_FROM]
+      ['MAIL_FROM', env.MAIL_FROM],
+      ['CONTACT_TO_EMAIL', env.CONTACT_TO_EMAIL ?? env.MAIL_SUPPORT_EMAIL]
     ],
     'search-worker': [
       ['DATABASE_URL', env.DATABASE_URL],
@@ -245,7 +260,16 @@ export const config = Object.freeze({
     brandName: env.MAIL_BRAND_NAME,
     logoUrl: env.MAIL_LOGO_URL,
     supportEmail: env.MAIL_SUPPORT_EMAIL,
+    contactEmail: env.CONTACT_TO_EMAIL ?? env.MAIL_SUPPORT_EMAIL,
     adminEmail: env.ADMIN_EMAIL
+  },
+  resend: {
+    apiKey: env.RESEND_API_KEY,
+    webhookSecret: env.RESEND_WEBHOOK_SECRET,
+    fromEmail: env.RESEND_FROM_EMAIL,
+    inboundContactEmail: env.RESEND_INBOUND_CONTACT_EMAIL,
+    notificationToEmail:
+      env.RESEND_NOTIFICATION_TO_EMAIL ?? env.CONTACT_TO_EMAIL ?? env.ADMIN_EMAIL
   },
   google: {
     clientId: env.GOOGLE_CLIENT_ID

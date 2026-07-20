@@ -47,7 +47,8 @@ function mapConflict(error: unknown): never {
 export async function listPublicServices(pagination: Pagination) {
   const offset = (pagination.page - 1) * pagination.limit;
   const result = await getDatabasePool().query(
-    `SELECT id, name, slug, description, image_url, type, status,
+    `SELECT id, name, slug, description, image_url, type,
+            order_flow AS "orderFlow", status,
             created_at, COUNT(*) OVER()::INTEGER AS total
      FROM services
      WHERE status = 'ACTIVE'
@@ -66,6 +67,7 @@ export async function listPublicServices(pagination: Pagination) {
 export async function listAdminServices(input: Pagination & {
   status?: string;
   type?: string;
+  orderFlow?: string;
   search?: string;
   sortBy: 'name' | 'type' | 'status' | 'created_at' | 'updated_at';
   sortOrder: 'asc' | 'desc';
@@ -86,7 +88,7 @@ export async function listAdminServices(input: Pagination & {
   const direction = input.sortOrder === 'asc' ? 'ASC' : 'DESC';
   const result = await getDatabasePool().query(
     `SELECT s.id, s.name, s.slug, s.description, s.image_url, s.type,
-            s.status, s.created_at, s.updated_at,
+            s.order_flow AS "orderFlow", s.status, s.created_at, s.updated_at,
             CASE WHEN $8 THEN (
               SELECT COUNT(*)::INTEGER FROM products p WHERE p.service_id = s.id
             ) END AS "productsCount",
@@ -101,6 +103,7 @@ export async function listAdminServices(input: Pagination & {
             OR s.description ILIKE $5)
        AND ($6::TIMESTAMPTZ IS NULL OR s.created_at >= $6)
        AND ($7::TIMESTAMPTZ IS NULL OR s.created_at <= $7)
+       AND ($9::service_order_flow IS NULL OR s.order_flow = $9)
      ORDER BY ${orderBy} ${direction}, s.id ASC
      LIMIT $1 OFFSET $2`,
     [
@@ -111,7 +114,8 @@ export async function listAdminServices(input: Pagination & {
       search,
       input.dateFrom ?? null,
       input.dateTo ?? null,
-      input.includeCounts
+      input.includeCounts,
+      input.orderFlow ?? null
     ]
   );
   const total = result.rows[0]?.total ?? 0;
@@ -124,7 +128,8 @@ export async function listAdminServices(input: Pagination & {
 
 export async function getAdminService(id: string) {
   const result = await getDatabasePool().query(
-    `SELECT s.*,
+    `SELECT s.id, s.name, s.slug, s.description, s.image_url, s.type,
+            s.order_flow AS "orderFlow", s.status, s.created_at, s.updated_at,
             (SELECT COUNT(*)::INTEGER FROM products p
              WHERE p.service_id = s.id) AS "productsCount",
             COALESCE((
@@ -183,7 +188,8 @@ export async function deleteService(id: string) {
 
 export async function getPublicService(slug: string) {
   const serviceResult = await getDatabasePool().query(
-    `SELECT id, name, slug, description, image_url, type
+    `SELECT id, name, slug, description, image_url, type,
+            order_flow AS "orderFlow"
      FROM services
      WHERE slug = $1 AND status = 'ACTIVE'`,
     [slug]
@@ -214,22 +220,25 @@ export async function createService(input: {
   description?: string | null;
   imageUrl?: string | null;
   type: 'PRODUCTS' | 'FORM';
+  orderFlow: 'DIRECT_PAYMENT' | 'ORDER_REQUEST';
 }) {
   try {
     const result = await getDatabasePool().query(
-      `INSERT INTO services(name, slug, description, image_url, type)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
+      `INSERT INTO services(name, slug, description, image_url, type, order_flow)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
       [
         input.name,
         createSlug(input.name),
         input.description || null,
         input.imageUrl || null,
-        input.type
+        input.type,
+        input.orderFlow
       ]
     );
+    const service = await getAdminService(result.rows[0].id);
     await syncServiceTree(result.rows[0].id);
-    return result.rows[0];
+    return service;
   } catch (error) {
     mapConflict(error);
   }
@@ -241,6 +250,7 @@ export async function updateService(
     name?: string;
     description?: string | null;
     imageUrl?: string | null;
+    orderFlow?: 'DIRECT_PAYMENT' | 'ORDER_REQUEST';
   }
 ) {
   try {
@@ -250,9 +260,10 @@ export async function updateService(
          slug = CASE WHEN $2::TEXT IS NULL THEN slug ELSE $3 END,
          description = CASE WHEN $4::BOOLEAN THEN $5 ELSE description END,
          image_url = CASE WHEN $6::BOOLEAN THEN $7 ELSE image_url END,
+         order_flow = COALESCE($8, order_flow),
          updated_at = NOW()
        WHERE id = $1
-       RETURNING *`,
+       RETURNING id`,
       [
         id,
         input.name ?? null,
@@ -260,15 +271,18 @@ export async function updateService(
         Object.hasOwn(input, 'description'),
         input.description || null,
         Object.hasOwn(input, 'imageUrl'),
-        input.imageUrl || null
+        input.imageUrl || null,
+        input.orderFlow ?? null
       ]
     );
 
-    if (!result.rows[0]) {
+    const updated = result.rows[0];
+    if (!updated) {
       throw new AppError(404, 'Service introuvable', 'SERVICE_NOT_FOUND');
     }
+    const service = await getAdminService(id);
     await syncServiceTree(id);
-    return result.rows[0];
+    return service;
   } catch (error) {
     mapConflict(error);
   }

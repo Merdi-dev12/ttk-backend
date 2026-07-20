@@ -7,6 +7,10 @@ import {
   verifyMailTransport
 } from '../email/mailer.js';
 import {
+  renderContactNotificationEmail,
+  renderContactReceiptEmail
+} from '../email/contactTemplates.js';
+import {
   renderOtpEmail,
   renderTestEmail
 } from '../email/templates.js';
@@ -25,6 +29,33 @@ const worker = new Worker<TransactionalEmailJob>(
         from: mailFrom,
         to: job.data.to,
         ...email
+      });
+      return;
+    }
+
+    if (job.data.type === 'CONTACT_MESSAGE') {
+      const contactEmail = mailBrand.contactEmail;
+      if (!contactEmail) {
+        throw new Error('CONTACT_TO_EMAIL or MAIL_SUPPORT_EMAIL is required');
+      }
+
+      const notification = renderContactNotificationEmail(mailBrand, job.data);
+      await mailTransporter.sendMail({
+        from: mailFrom,
+        to: contactEmail,
+        replyTo: {
+          name: job.data.name,
+          address: job.data.email
+        },
+        ...notification
+      });
+
+      const receipt = renderContactReceiptEmail(mailBrand, job.data);
+      await mailTransporter.sendMail({
+        from: mailFrom,
+        to: job.data.email,
+        replyTo: contactEmail,
+        ...receipt
       });
       return;
     }
