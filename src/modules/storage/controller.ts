@@ -10,11 +10,15 @@ export const listBuckets: RequestHandler = async (_request, response) => {
 export const getPublicObject: RequestHandler = async (request, response) => {
   const { providerName, objectKey } = request.params as {
     providerName: string;
-    objectKey: string;
+    objectKey: string | string[];
   };
+  const normalizedObjectKey = Array.isArray(objectKey)
+    ? objectKey.join('/')
+    : objectKey;
+
   const object = await storageService.getPublicObject(
     providerName,
-    objectKey
+    normalizedObjectKey
   );
 
   response.setHeader('Content-Type', object.mimeType);

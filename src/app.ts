@@ -81,6 +81,7 @@ app.get('/api-docs.json', (_request, response) => {
 });
 
 app.use('/storage', publicStorageRoutes);
+app.use(`${config.apiPrefix}/storage/public`, publicStorageRoutes);
 
 app.get(`${config.apiPrefix}/health`, (_request, response) => {
   response.status(200).json({
