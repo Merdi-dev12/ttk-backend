@@ -16,6 +16,7 @@ import { requestLogger } from './core/middlewares/requestLogger.middleware.js';
 import { rejectSuspiciousRequests } from './core/middlewares/security.middleware.js';
 import authRoutes from './modules/auth/routes.js';
 import adminRoutes from './modules/admin/routes.js';
+import announcementRoutes from './modules/announcements/routes.js';
 import catalogRoutes from './modules/catalog/routes.js';
 import contactRoutes from './modules/contact/routes.js';
 import storageRoutes from './modules/storage/routes.js';
@@ -90,6 +91,7 @@ app.get(`${config.apiPrefix}/health`, (_request, response) => {
 });
 
 app.use(`${config.apiPrefix}/auth`, authRoutes);
+app.use(`${config.apiPrefix}/announcements`, announcementRoutes);
 app.use(`${config.apiPrefix}/contact`, contactRoutes);
 app.use(`${config.apiPrefix}/webhooks`, webhookRoutes);
 app.use(`${config.apiPrefix}/admin`, adminRoutes);

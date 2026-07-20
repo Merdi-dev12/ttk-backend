@@ -1,6 +1,7 @@
 import { config } from './env.js';
 import { adminPaths } from './swagger.admin.js';
 import { adminExtraPaths } from './swagger.admin.extra.js';
+import { announcementPaths } from './swagger.announcements.js';
 import { authPaths } from './swagger.auth.js';
 import { dashboardPaths } from './swagger.dashboard.js';
 import { publicPaths } from './swagger.public.js';
@@ -63,11 +64,20 @@ export const openApiDocument = {
       name: 'Settings Admin',
       description:
         'Configuration fonctionnelle, cache et notifications de test.'
+    },
+    {
+      name: 'Announcements',
+      description: 'Annonces publiques affichees par le front.'
+    },
+    {
+      name: 'Announcements Admin',
+      description: 'Creation, publication et gestion des annonces.'
     }
   ],
   paths: {
     ...publicPaths,
     ...authPaths,
+    ...announcementPaths,
     ...adminPaths,
     ...adminExtraPaths,
     ...dashboardPaths,
