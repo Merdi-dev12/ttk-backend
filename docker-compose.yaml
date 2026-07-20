@@ -5,7 +5,7 @@ services:
     image: ttk-backend-api:latest
     build:
       context: .
-      target: production # <--- Obligatoire en prod pour utiliser le build d'index.js
+      target: production
     ports:
       - "${PORT:-3000}:3000"
     environment:
@@ -16,8 +16,8 @@ services:
       API_PREFIX: ${API_PREFIX:-/api/v1}
       CORS_ORIGIN: ${CORS_ORIGIN}
       FRONTEND_URL: ${FRONTEND_URL}
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       MEILI_HOST: http://meilisearch:7700
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       STORAGE_ENDPOINT: http://minio:9000
@@ -45,6 +45,11 @@ services:
       REQUEST_BODY_LIMIT: ${REQUEST_BODY_LIMIT:-1mb}
       GLOBAL_RATE_LIMIT_WINDOW_MS: ${GLOBAL_RATE_LIMIT_WINDOW_MS:-900000}
       GLOBAL_RATE_LIMIT_MAX: ${GLOBAL_RATE_LIMIT_MAX:-300}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@ttk-services.agency}
+      RESEND_INBOUND_CONTACT_EMAIL: ${RESEND_INBOUND_CONTACT_EMAIL:-contact@ttk-services.agency}
+      RESEND_NOTIFICATION_TO_EMAIL: ${RESEND_NOTIFICATION_TO_EMAIL:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,7 +75,7 @@ services:
     environment:
       NODE_ENV: production
       APP_ROLE: email-worker
-      REDIS_URL: ${REDIS_URL}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_SECURE: ${SMTP_SECURE}
@@ -79,6 +84,9 @@ services:
       MAIL_FROM: ${MAIL_FROM}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME}
       MAIL_BRAND_NAME: ${MAIL_BRAND_NAME}
+      MAIL_LOGO_URL: ${MAIL_LOGO_URL:-}
+      MAIL_SUPPORT_EMAIL: ${MAIL_SUPPORT_EMAIL:-}
+      CONTACT_TO_EMAIL: ${CONTACT_TO_EMAIL}
       FRONTEND_URL: ${FRONTEND_URL}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -96,8 +104,8 @@ services:
     environment:
       NODE_ENV: production
       APP_ROLE: search-worker
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       MEILI_HOST: http://meilisearch:7700
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -144,7 +152,7 @@ services:
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       MEILI_DB_PATH: /meili_data/data.ms
-      MEILI_ENV: production # En prod, Meilisearch exige une clé master forte
+      MEILI_ENV: production
       MEILI_NO_ANALYTICS: "true"
     ports:
       - "127.0.0.1:${MEILI_PORT:-7700}:7700" # Protégé localement
