@@ -19,6 +19,7 @@ import adminRoutes from './modules/admin/routes.js';
 import catalogRoutes from './modules/catalog/routes.js';
 import contactRoutes from './modules/contact/routes.js';
 import storageRoutes from './modules/storage/routes.js';
+import publicStorageRoutes from './modules/storage/public.routes.js';
 import userRoutes from './modules/users/routes.js';
 import webhookRoutes from './modules/webhooks/routes.js';
 
@@ -77,6 +78,8 @@ app.get(['/api-docs', '/api-docs/'], swaggerHandler);
 app.get('/api-docs.json', (_request, response) => {
   response.json(openApiDocument);
 });
+
+app.use('/storage', publicStorageRoutes);
 
 app.get(`${config.apiPrefix}/health`, (_request, response) => {
   response.status(200).json({

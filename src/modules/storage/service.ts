@@ -2,10 +2,12 @@ import {
   CreateBucketCommand,
   DeleteBucketCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
   PutBucketPolicyCommand,
   PutObjectCommand
 } from '@aws-sdk/client-s3';
 import { randomUUID } from 'node:crypto';
+import { Readable } from 'node:stream';
 import { fileTypeFromBuffer } from 'file-type';
 import { getDatabasePool } from '../../core/config/database.js';
 import { config } from '../../core/config/env.js';
@@ -241,6 +243,61 @@ async function findBucket(bucketId: string) {
     throw new AppError(404, 'Bucket introuvable', 'STORAGE_BUCKET_NOT_FOUND');
   }
   return result.rows[0];
+}
+
+export async function getPublicObject(
+  providerName: string,
+  objectKey: string
+) {
+  const bucketResult = await getDatabasePool().query<{
+    id: string;
+    is_public: boolean;
+  }>(
+    `SELECT id, is_public
+     FROM storage_buckets
+     WHERE provider_name = $1`,
+    [providerName]
+  );
+  const bucket = bucketResult.rows[0];
+
+  if (!bucket || !bucket.is_public) {
+    throw new AppError(404, 'Objet introuvable', 'STORAGE_OBJECT_NOT_FOUND');
+  }
+
+  const objectResult = await getDatabasePool().query<{
+    mime_type: string;
+    size: string;
+  }>(
+    `SELECT mime_type, size
+     FROM storage_objects
+     WHERE bucket_id = $1 AND object_key = $2`,
+    [bucket.id, objectKey]
+  );
+  const object = objectResult.rows[0];
+
+  if (!object) {
+    throw new AppError(404, 'Objet introuvable', 'STORAGE_OBJECT_NOT_FOUND');
+  }
+
+  try {
+    const storageObject = await getStorageClient().send(new GetObjectCommand({
+      Bucket: providerName,
+      Key: objectKey
+    }));
+
+    if (!(storageObject.Body instanceof Readable)) {
+      throw new Error('Unsupported storage object stream');
+    }
+
+    return {
+      body: storageObject.Body,
+      mimeType: storageObject.ContentType ?? object.mime_type,
+      size: Number(storageObject.ContentLength ?? object.size),
+      etag: storageObject.ETag
+    };
+  } catch (error) {
+    mapStorageError(error);
+  }
 }
 
 export async function listObjects(bucketId: string) {

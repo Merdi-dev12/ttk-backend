@@ -7,6 +7,26 @@ export const listBuckets: RequestHandler = async (_request, response) => {
   response.json({ status: 'success', data: { buckets } });
 };
 
+export const getPublicObject: RequestHandler = async (request, response) => {
+  const { providerName, objectKey } = request.params as {
+    providerName: string;
+    objectKey: string;
+  };
+  const object = await storageService.getPublicObject(
+    providerName,
+    objectKey
+  );
+
+  response.setHeader('Content-Type', object.mimeType);
+  response.setHeader('Content-Length', String(object.size));
+  response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  if (object.etag) {
+    response.setHeader('ETag', object.etag);
+  }
+
+  object.body.pipe(response);
+};
+
 export const createBucket: RequestHandler = async (request, response) => {
   const bucket = await storageService.createBucket(
     request.validated?.body as CreateBucketInput,
