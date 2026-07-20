@@ -149,5 +149,12 @@ export const settingsSchemas = {
     properties: {
       email: { type: 'string', format: 'email', example: 'admin@example.com' }
     }
+  },
+  SuccessMessageResponse: {
+    type: 'object',
+    properties: {
+      status: { type: 'string', enum: ['success'] },
+      message: { type: 'string' }
+    }
   }
 };

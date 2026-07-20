@@ -12,6 +12,7 @@ import {
 } from './schema.js';
 import * as settingsController from './settings.controller.js';
 import {
+  settingsPatchSchema,
   settingsSchemas,
   testEmailSchema
 } from './settings.schema.js';
@@ -44,7 +45,7 @@ for (const section of Object.keys(settingsSchemas) as Array<
 >) {
   router.patch(
     `/settings/${section}`,
-    validate({ body: settingsSchemas[section] }),
+    validate({ body: settingsPatchSchema }),
     catchAsync(settingsController.updateSection(section))
   );
 }

@@ -2,7 +2,10 @@ import ipaddr from 'ipaddr.js';
 import { getDatabasePool } from '../../core/config/database.js';
 import { getRedisClient } from '../../core/config/redis.js';
 import { AppError } from '../../core/utils/appError.js';
-import type { SettingsSection } from './settings.schema.js';
+import {
+  settingsSchemas,
+  type SettingsSection
+} from './settings.schema.js';
 
 const cacheKey = 'admin:settings';
 
@@ -41,25 +44,13 @@ export async function getSettings() {
 
 export async function updateSettings(
   section: SettingsSection,
-  value: Record<string, unknown>,
+  patch: Record<string, unknown>,
   context: {
     adminId: string;
     ipAddress: string;
     userAgent?: string;
   }
 ) {
-  if (section === 'security') {
-    const allowed = value.allowedAdminIps as string[];
-    const currentIp = normalizeIp(context.ipAddress);
-    if (allowed.length > 0 && !allowed.some((rule) => ipMatchesRule(currentIp, rule))) {
-      throw new AppError(
-        409,
-        "La restriction IP doit autoriser l'adresse actuelle de l'administrateur",
-        'CURRENT_ADMIN_IP_BLOCKED'
-      );
-    }
-  }
-
   const client = await getDatabasePool().connect();
   await client.query('BEGIN');
   try {
@@ -68,6 +59,32 @@ export async function updateSettings(
       [section]
     );
     const previous = current.rows[0]?.value ?? null;
+    const candidate = {
+      ...(previous ?? {}),
+      ...patch
+    };
+    const { value, error } = settingsSchemas[section].validate(candidate, {
+      abortEarly: false,
+      stripUnknown: true,
+      convert: true
+    });
+
+    if (error) {
+      throw new AppError(400, error.message, 'VALIDATION_ERROR');
+    }
+
+    if (section === 'security') {
+      const allowed = value.allowedAdminIps as string[];
+      const currentIp = normalizeIp(context.ipAddress);
+      if (allowed.length > 0 && !allowed.some((rule) => ipMatchesRule(currentIp, rule))) {
+        throw new AppError(
+          409,
+          "La restriction IP doit autoriser l'adresse actuelle de l'administrateur",
+          'CURRENT_ADMIN_IP_BLOCKED'
+        );
+      }
+    }
+
     await client.query(
       `INSERT INTO admin_settings(section, value, updated_by, updated_at)
        VALUES ($1, $2, $3, NOW())

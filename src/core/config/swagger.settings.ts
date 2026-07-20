@@ -2,7 +2,6 @@ import {
   adminErrors,
   errorResponse,
   jsonResponse,
-  noContentResponse,
   requestBody,
   secure
 } from './swagger.helpers.js';
@@ -24,13 +23,13 @@ const sectionPaths = Object.fromEntries(
       patch: {
         tags: ['Settings Admin'],
         security: secure,
-        summary: `Modifier les paramètres ${section}`,
+        summary: `Modifier les parametres ${section}`,
         description:
-          'Remplace la section, enregistre un audit et invalide le cache de configuration.',
+          'Fusionne les champs envoyes avec la section existante, valide le resultat complet, enregistre un audit et invalide le cache de configuration.',
         requestBody: requestBody(schema),
         responses: {
           '200': jsonResponse(
-            'La configuration globale mise à jour est retournée.',
+            'La configuration globale mise a jour est retournee.',
             'AdminSettingsResponse'
           ),
           ...adminErrors,
@@ -54,12 +53,12 @@ export const settingsPaths = {
     get: {
       tags: ['Settings Admin'],
       security: secure,
-      summary: 'Lire les paramètres administrateur',
+      summary: 'Lire les parametres administrateur',
       description:
         'Retourne uniquement les options fonctionnelles non sensibles.',
       responses: {
         '200': jsonResponse(
-          'Les sept sections de paramètres sont retournées.',
+          'Les sections de parametres sont retournees.',
           'AdminSettingsResponse'
         ),
         ...adminErrors
@@ -72,11 +71,12 @@ export const settingsPaths = {
       tags: ['Settings Admin'],
       security: secure,
       summary: 'Envoyer un email de test',
-      description: 'Place l’email de test dans la file BullMQ.',
+      description: "Place l'email de test dans la file BullMQ.",
       requestBody: requestBody('TestEmailRequest'),
       responses: {
-        '204': noContentResponse(
-          'L’email est accepté dans la file. Aucun JSON n’est retourné.'
+        '202': jsonResponse(
+          "L'email est accepte dans la file.",
+          'SuccessMessageResponse'
         ),
         ...adminErrors
       }
@@ -88,8 +88,9 @@ export const settingsPaths = {
       security: secure,
       summary: 'Vider le cache de configuration',
       responses: {
-        '204': noContentResponse(
-          'Le cache reconstructible des paramètres est supprimé.'
+        '200': jsonResponse(
+          'Le cache reconstructible des parametres est supprime.',
+          'SuccessMessageResponse'
         ),
         ...adminErrors
       }

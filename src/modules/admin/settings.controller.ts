@@ -39,12 +39,18 @@ export const testEmail: RequestHandler = async (request, response) => {
     to: email,
     platformName: general.platformName ?? 'TTK Services'
   });
-  response.status(204).send();
+  response.status(202).json({
+    status: 'success',
+    message: 'Email de test ajoute a la file d envoi.'
+  });
 };
 
 export const clearCache: RequestHandler = async (_request, response) => {
   await settingsService.clearSettingsCache();
-  response.status(204).send();
+  response.json({
+    status: 'success',
+    message: 'Cache des parametres vide.'
+  });
 };
 
 export { settingsSchemas };

@@ -81,4 +81,8 @@ export const testEmailSchema = Joi.object({
   email: Joi.string().email().max(150).required()
 });
 
+export const settingsPatchSchema = Joi.object()
+  .min(1)
+  .unknown(true);
+
 export type SettingsSection = keyof typeof settingsSchemas;
