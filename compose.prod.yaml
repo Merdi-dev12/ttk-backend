@@ -17,7 +17,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
-      MEILI_HOST: ${MEILI_HOST}
+      MEILI_HOST: ${MEILI_HOST:-http://meilisearch:7700}
       STORAGE_ENDPOINT: ${STORAGE_ENDPOINT}
       STORAGE_PUBLIC_BASE_URL: ${STORAGE_PUBLIC_BASE_URL}
       STORAGE_FORCE_PATH_STYLE: ${STORAGE_FORCE_PATH_STYLE}
@@ -75,7 +75,7 @@ services:
       APP_ROLE: search-worker
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
-      MEILI_HOST: ${MEILI_HOST}
+      MEILI_HOST: ${MEILI_HOST:-http://meilisearch:7700}
       LOG_LEVEL: ${LOG_LEVEL}
       LOG_FORMAT: ${LOG_FORMAT}
     depends_on:
@@ -127,7 +127,7 @@ services:
     volumes:
       - meilisearch_prod_data:/meili_data
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:$${MEILI_PORT}/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:7700/health || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 5
