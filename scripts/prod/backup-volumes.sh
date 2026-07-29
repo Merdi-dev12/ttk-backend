@@ -12,15 +12,20 @@ backup_volume() {
   volume_name="$1"
   output_file="${BACKUP_DIR}/${volume_name}-${TIMESTAMP}.tar.gz"
   output_name="$(basename "$output_file")"
+  host_uid="$(id -u)"
+  host_gid="$(id -g)"
 
   echo "Creating volume backup: ${output_file}"
   docker run --rm \
+    -e HOST_UID="${host_uid}" \
+    -e HOST_GID="${host_gid}" \
     -v "${volume_name}:/volume:ro" \
     -v "$(pwd)/${BACKUP_DIR}:/backup" \
     alpine:3.20 \
-    sh -lc "cd /volume && tar -czf /backup/${output_name} ."
+    sh -lc "cd /volume && tar -czf /backup/${output_name} . && chown \"\${HOST_UID}:\${HOST_GID}\" /backup/${output_name} && chmod 600 /backup/${output_name}"
 
   sha256sum "$output_file" > "${output_file}.sha256"
+  chmod 600 "${output_file}.sha256"
 }
 
 backup_volume "ttk-backend-prod_minio_data"
