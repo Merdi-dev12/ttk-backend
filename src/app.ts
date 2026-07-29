@@ -14,6 +14,7 @@ import {
 } from './core/middlewares/error.middleware.js';
 import { requestLogger } from './core/middlewares/requestLogger.middleware.js';
 import { rejectSuspiciousRequests } from './core/middlewares/security.middleware.js';
+import { logger } from './core/utils/logger.js';
 import authRoutes from './modules/auth/routes.js';
 import adminRoutes from './modules/admin/routes.js';
 import announcementRoutes from './modules/announcements/routes.js';
@@ -26,13 +27,34 @@ import webhookRoutes from './modules/webhooks/routes.js';
 
 const app: Application = express();
 const isCorsWildcard = config.corsOrigin === '*';
-const corsOrigins =
-  isCorsWildcard
-    ? true
-    : config.corsOrigin
-        .split(',')
-        .map((origin) => origin.trim())
-        .filter(Boolean);
+const corsOrigins = new Set(
+  config.corsOrigin
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, '').toLowerCase())
+    .filter(Boolean)
+);
+
+function resolveCorsOrigin(
+  origin: string | undefined,
+  callback: (error: Error | null, allow?: boolean) => void
+) {
+  if (isCorsWildcard || !origin) {
+    callback(null, true);
+    return;
+  }
+
+  const normalizedOrigin = origin.trim().replace(/\/+$/, '').toLowerCase();
+  if (corsOrigins.has(normalizedOrigin)) {
+    callback(null, true);
+    return;
+  }
+
+  logger.warn('cors_origin_denied', {
+    origin,
+    allowedOrigins: Array.from(corsOrigins)
+  });
+  callback(null, false);
+}
 
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
@@ -45,7 +67,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: corsOrigins,
+    origin: resolveCorsOrigin,
     credentials: !isCorsWildcard,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type', 'X-Request-Id'],

@@ -49,6 +49,17 @@ La production utilise toujours `.env.production` et `compose.prod.yaml`.
 Il n'y a plus de fichier `docker-compose.yaml` par defaut dans ce projet afin
 d'eviter de lancer le mauvais environnement par accident.
 
+En production, `CORS_ORIGIN` doit contenir exactement les origins navigateur
+autorisees, separees par des virgules, sans slash final. Exemple :
+
+```dotenv
+CORS_ORIGIN=https://ttk-services.agency,https://www.ttk-services.agency,https://admin.ttk-services.agency,https://api.ttk-services.agency
+```
+
+Si tu testes temporairement l'API de production depuis un front local, ajoute
+aussi l'origin locale utilisee, par exemple `http://localhost:5173` ou
+`http://localhost:4200`, puis redeploie.
+
 Si `.env.production` existe deja sur le VPS, ajouter aussi ces variables
 d'orchestration Docker :
 
