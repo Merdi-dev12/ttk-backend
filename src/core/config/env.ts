@@ -13,7 +13,13 @@ const envSchema = Joi.object({
   API_PREFIX: Joi.string().pattern(/^\/[a-zA-Z0-9/_-]*$/).default('/api/v1'),
   CORS_ORIGIN: Joi.string().default('*'),
   FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
-  TRUST_PROXY: Joi.boolean().default(false),
+  TRUST_PROXY: Joi.alternatives()
+    .try(
+      Joi.boolean(),
+      Joi.number().integer().min(0).max(10),
+      Joi.string().trim().pattern(/^(true|false|\d+)$/i)
+    )
+    .default(false),
   LOG_LEVEL: Joi.string()
     .valid('error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly')
     .default('info'),
@@ -94,7 +100,7 @@ const env = value as {
   API_PREFIX: string;
   CORS_ORIGIN: string;
   FRONTEND_URL: string;
-  TRUST_PROXY: boolean;
+  TRUST_PROXY: boolean | number | string;
   LOG_LEVEL: 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
   LOG_FORMAT: 'json' | 'pretty';
   REQUEST_BODY_LIMIT: string;
@@ -144,6 +150,30 @@ const env = value as {
   ADMIN_NAME?: string;
   ADMIN_PASSWORD?: string;
 };
+
+type TrustProxySetting = boolean | number;
+
+function parseTrustProxy(value: boolean | number | string): TrustProxySetting {
+  if (typeof value === 'boolean') {
+    return value ? 1 : false;
+  }
+
+  if (typeof value === 'number') {
+    return value > 0 ? value : false;
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+  if (normalizedValue === 'true') {
+    return 1;
+  }
+
+  if (normalizedValue === 'false') {
+    return false;
+  }
+
+  const proxyHopCount = Number(normalizedValue);
+  return proxyHopCount > 0 ? proxyHopCount : false;
+}
 
 const placeholderValues = new Set([
   'change-me',
@@ -219,7 +249,7 @@ export const config = Object.freeze({
   apiPrefix: env.API_PREFIX,
   corsOrigin: env.CORS_ORIGIN,
   frontendUrl: env.FRONTEND_URL,
-  trustProxy: env.TRUST_PROXY,
+  trustProxy: parseTrustProxy(env.TRUST_PROXY),
   log: {
     level: env.LOG_LEVEL,
     format: env.LOG_FORMAT
