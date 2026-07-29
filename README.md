@@ -32,22 +32,32 @@ npm run infra:down
 ```
 
 Le local utilise toujours `.env` et `compose.dev.yaml`.
+Ne lance pas `docker compose up` sans `-f compose.dev.yaml` en local, car
+`compose.yaml` est le compose de production par defaut pour le VPS.
 
 ## Demarrage production
 
-Sur le VPS, creer `.env.production` a partir de `.env.production.example`,
-puis y mettre les vraies valeurs de production.
+Sur le VPS, creer `.env` a partir de `.env.production.example`, puis y mettre
+les vraies valeurs de production. Le fichier `.env` du VPS n'est pas le meme
+que ton `.env` local, car il n'est pas versionne par Git.
 
 ```bash
-cp .env.production.example .env.production
-npm run infra:prod:up
-npm run db:migrate:prod
-npm run admin:create:prod
+cp .env.production.example .env
+docker compose down
+docker compose up -d --build
 ```
 
-La production utilise toujours `.env.production` et `compose.prod.yaml`.
-Il n'y a plus de fichier `docker-compose.yaml` par defaut dans ce projet afin
-d'eviter de lancer le mauvais environnement par accident.
+Commandes utiles apres le demarrage, sans npm sur le VPS :
+
+```bash
+docker compose exec api node dist/core/database/migrate.js
+docker compose exec api node dist/modules/users/createAdmin.js
+docker compose exec api node dist/core/search/reindex.js
+```
+
+La production utilise toujours `.env` et `compose.yaml`. Ce fichier est le
+compose de production par defaut, donc sur le VPS tu n'as pas besoin de npm ni
+de `-f compose.prod.yaml`.
 
 En production, `CORS_ORIGIN` doit contenir exactement les origins navigateur
 autorisees, separees par des virgules, sans slash final. Exemple :
@@ -60,11 +70,10 @@ Si tu testes temporairement l'API de production depuis un front local, ajoute
 aussi l'origin locale utilisee, par exemple `http://localhost:5173` ou
 `http://localhost:4200`, puis redeploie.
 
-Si `.env.production` existe deja sur le VPS, ajouter aussi ces variables
-d'orchestration Docker :
+Si `.env` existe deja sur le VPS, ajouter aussi ces variables d'orchestration
+Docker :
 
 ```dotenv
-COMPOSE_ENV_FILE=.env.production
 API_APP_ROLE=api
 EMAIL_WORKER_APP_ROLE=email-worker
 SEARCH_WORKER_APP_ROLE=search-worker
@@ -93,8 +102,8 @@ STORAGE_CONSOLE_INTERNAL_PORT=9001
 | `npm start` | Execute la version compilee |
 | `npm run infra:up` | Demarre l'environnement local avec `.env` et `compose.dev.yaml` |
 | `npm run infra:down` | Arrete l'environnement local sans supprimer les volumes |
-| `npm run infra:prod:up` | Demarre l'environnement production avec `.env.production` et `compose.prod.yaml` |
-| `npm run infra:prod:down` | Arrete l'environnement production sans supprimer les volumes |
+| `npm run infra:prod:up` | Demarre l'environnement production avec `.env` et `compose.prod.yaml`, utile seulement depuis une machine avec npm |
+| `npm run infra:prod:down` | Arrete l'environnement production sans supprimer les volumes, utile seulement depuis une machine avec npm |
 | `npm run db:migrate` | Applique les migrations depuis la machine |
 | `npm run db:migrate:docker` | Applique les migrations depuis l'API Docker locale |
 | `npm run db:migrate:prod` | Applique les migrations depuis l'API Docker production |
@@ -260,9 +269,8 @@ continue d'utiliser son port standard `5432`.
 
 ## Configuration
 
-Copier `.env.local.example` vers `.env` pour le local, ou
-`.env.production.example` vers `.env.production` pour le VPS. Les principaux
-groupes sont :
+Copier `.env.local.example` vers `.env` pour le local. Sur le VPS, copier
+`.env.production.example` vers `.env`. Les principaux groupes sont :
 
 - HTTP : `HOST`, `PORT`, `API_PREFIX`, `CORS_ORIGIN`;
 - donnees : `DATABASE_URL`, `REDIS_URL`, `MEILI_HOST`;
@@ -276,7 +284,7 @@ groupes sont :
   identifiant public est expose au front via `VITE_GOOGLE_CLIENT_ID`;
 - admin initial : `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
 
-Ne jamais versionner `.env` ni `.env.production`.
+Ne jamais versionner `.env`.
 
 ## Architecture
 

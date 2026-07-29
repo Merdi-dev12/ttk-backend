@@ -30,18 +30,18 @@ jobs:
             git clean -df
             
             # 3. Relancer l'orchestration Docker Compose de production
-            docker compose --env-file .env.production -f compose.prod.yaml up -d --build --wait
+            docker compose up -d --build --wait
             
             # 4. Exécuter les scripts de base de données et d'indexation en production
             # On utilise les scripts prod: compilés en JavaScript natif
             
             echo "🗄️ Exécution des migrations SQL..."
-            docker compose --env-file .env.production -f compose.prod.yaml exec -T api npm run prod:db:migrate
+            docker compose exec -T api node dist/core/database/migrate.js
             
             echo "🌱 Seeding du catalogue..."
-            docker compose --env-file .env.production -f compose.prod.yaml exec -T api npm run prod:db:seed:catalog
+            docker compose exec -T api node dist/core/database/seedCatalog.js
             
             echo "🔍 Réindexation Meilisearch..."
-            docker compose --env-file .env.production -f compose.prod.yaml exec -T api npm run prod:search:reindex
+            docker compose exec -T api node dist/core/search/reindex.js
             
             echo "✅ Déploiement et initialisation réussis avec succès !"
