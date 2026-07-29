@@ -70,26 +70,17 @@ Si tu testes temporairement l'API de production depuis un front local, ajoute
 aussi l'origin locale utilisee, par exemple `http://localhost:5173` ou
 `http://localhost:4200`, puis redeploie.
 
-Si `.env` existe deja sur le VPS, ajouter aussi ces variables d'orchestration
-Docker :
+Si `.env` existe deja sur le VPS, verifie au minimum ces variables :
 
 ```dotenv
-API_APP_ROLE=api
-EMAIL_WORKER_APP_ROLE=email-worker
-SEARCH_WORKER_APP_ROLE=search-worker
 API_IMAGE=ttk-backend-api:prod
 API_BUILD_TARGET=production
-POSTGRES_INTERNAL_PORT=5432
-DOCKER_DATABASE_URL=postgresql://USER:PASSWORD@postgres:5432/DB_NAME
-REDIS_INTERNAL_PORT=6379
-DOCKER_REDIS_URL=redis://:PASSWORD@redis:6379
+DATABASE_URL=postgresql://USER:PASSWORD@postgres:5432/DB_NAME
+REDIS_URL=redis://:PASSWORD@redis:6379
 MEILI_HOST=http://meilisearch:7700
-DOCKER_MEILI_HOST=http://meilisearch:7700
-MEILI_DB_PATH=/meili_data/data.ms
-MEILI_ENV=production
-DOCKER_STORAGE_ENDPOINT=http://minio:9000
-STORAGE_INTERNAL_PORT=9000
-STORAGE_CONSOLE_INTERNAL_PORT=9001
+STORAGE_ENDPOINT=http://minio:9000
+STORAGE_PORT=9000
+STORAGE_CONSOLE_PORT=9001
 ```
 
 ## Commandes
