@@ -169,9 +169,11 @@ function assertProductionSecurity(): void {
       ['JWT_SECRET', env.JWT_SECRET],
       ['DATABASE_URL', env.DATABASE_URL],
       ['REDIS_URL', env.REDIS_URL],
+      ['MEILI_HOST', env.MEILI_HOST],
       ['MEILI_MASTER_KEY', env.MEILI_MASTER_KEY],
       ['STORAGE_ACCESS_KEY', env.STORAGE_ACCESS_KEY],
-      ['STORAGE_SECRET_KEY', env.STORAGE_SECRET_KEY]
+      ['STORAGE_SECRET_KEY', env.STORAGE_SECRET_KEY],
+      ['STORAGE_PUBLIC_BASE_URL', env.STORAGE_PUBLIC_BASE_URL]
     ],
     'email-worker': [
       ['REDIS_URL', env.REDIS_URL],
@@ -184,6 +186,7 @@ function assertProductionSecurity(): void {
     'search-worker': [
       ['DATABASE_URL', env.DATABASE_URL],
       ['REDIS_URL', env.REDIS_URL],
+      ['MEILI_HOST', env.MEILI_HOST],
       ['MEILI_MASTER_KEY', env.MEILI_MASTER_KEY]
     ],
     job: [

@@ -5,4 +5,6 @@ dist/
 .env.*
 !.env.example
 *.log
+logs/
+backups/
 coverage/

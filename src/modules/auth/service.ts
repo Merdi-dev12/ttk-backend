@@ -222,7 +222,7 @@ export async function login(
     `SELECT id, nom, postnom, email, role, status, avatar_url,
             created_at, password_hash
      FROM users
-     WHERE email = $1`,
+     WHERE LOWER(email) = LOWER($1)`,
     [input.email]
   );
   const user = result.rows[0];

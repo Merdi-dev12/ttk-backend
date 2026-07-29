@@ -6,5 +6,7 @@ dist/
 !.env.local.example
 !.env.production.example
 *.log
+logs/
+backups/
 .coverage/
 coverage/

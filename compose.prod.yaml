@@ -7,7 +7,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${PORT}:${PORT}"
+      - "127.0.0.1:${PORT}:${PORT}"
     environment:
       NODE_ENV: ${NODE_ENV}
       APP_ROLE: api

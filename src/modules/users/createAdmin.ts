@@ -16,6 +16,7 @@ async function createAdmin(): Promise<void> {
     password,
     config.auth.bcryptRounds
   );
+  const normalizedEmail = email.toLowerCase();
 
   const pool = getDatabasePool();
 
@@ -36,7 +37,7 @@ async function createAdmin(): Promise<void> {
              password_changed_at = NOW(),
              updated_at = NOW()
          WHERE id = $1`,
-        [admin.id, name, email, passwordHash]
+        [admin.id, name, normalizedEmail, passwordHash]
       );
       await pool.query(
         `UPDATE refresh_tokens SET revoked_at = NOW()
@@ -51,7 +52,7 @@ async function createAdmin(): Promise<void> {
       `INSERT INTO users(nom, email, password_hash, role)
        VALUES ($1, $2, $3, 'ADMIN')
       RETURNING id`,
-      [name, email, passwordHash]
+      [name, normalizedEmail, passwordHash]
     );
     logger.info('admin_created', { adminId: result.rows[0]!.id });
   } catch (error) {

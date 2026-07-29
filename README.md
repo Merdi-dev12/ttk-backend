@@ -55,6 +55,9 @@ docker compose exec api node dist/modules/users/createAdmin.js
 docker compose exec api node dist/core/search/reindex.js
 ```
 
+Le guide backup, restauration, replication et checklist securite est dans
+[`docs/production-backup-and-security.md`](docs/production-backup-and-security.md).
+
 La production utilise toujours `.env` et `compose.yaml`. Ce fichier est le
 compose de production par defaut, donc sur le VPS tu n'as pas besoin de npm ni
 de `-f compose.prod.yaml`.
