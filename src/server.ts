@@ -4,7 +4,6 @@ import { closeDatabase } from './core/config/database.js';
 import { config } from './core/config/env.js';
 import { closeRedis } from './core/config/redis.js';
 import { logger } from './core/utils/logger.js';
-import { warmGoogleAuth } from './modules/auth/google.service.js';
 
 let server: Server | undefined;
 
@@ -32,9 +31,6 @@ server = app.listen(config.port, config.host, () => {
     url: `http://localhost:${config.port}`,
     swaggerUrl: `http://localhost:${config.port}/api-docs`
   });
-  void warmGoogleAuth()
-    .then(() => logger.info('google_certificates_cached'))
-    .catch((error) => logger.warn('google_certificate_prefetch_failed', { error }));
 });
 
 process.once('SIGINT', () => void shutdown('SIGINT'));

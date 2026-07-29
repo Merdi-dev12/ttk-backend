@@ -65,6 +65,8 @@ const envSchema = Joi.object({
     .email()
     .default('contact@ttk-services.agency'),
   RESEND_NOTIFICATION_TO_EMAIL: Joi.string().email().empty('').optional(),
+  SUPABASE_URL: Joi.string().uri().empty('').optional(),
+  SUPABASE_ANON_KEY: Joi.string().empty('').optional(),
   GOOGLE_CLIENT_ID: Joi.string()
     .pattern(/^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$/)
     .empty('').optional(),
@@ -135,6 +137,8 @@ const env = value as {
   RESEND_FROM_EMAIL: string;
   RESEND_INBOUND_CONTACT_EMAIL: string;
   RESEND_NOTIFICATION_TO_EMAIL?: string;
+  SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
   GOOGLE_CLIENT_ID?: string;
   ADMIN_EMAIL?: string;
   ADMIN_NAME?: string;
@@ -270,6 +274,10 @@ export const config = Object.freeze({
     inboundContactEmail: env.RESEND_INBOUND_CONTACT_EMAIL,
     notificationToEmail:
       env.RESEND_NOTIFICATION_TO_EMAIL ?? env.CONTACT_TO_EMAIL ?? env.ADMIN_EMAIL
+  },
+  supabase: {
+    url: env.SUPABASE_URL,
+    anonKey: env.SUPABASE_ANON_KEY
   },
   google: {
     clientId: env.GOOGLE_CLIENT_ID

@@ -33,6 +33,10 @@ export const googleLoginSchema = Joi.object({
   credential: Joi.string().trim().min(100).max(5000).required()
 });
 
+export const supabaseLoginSchema = Joi.object({
+  accessToken: Joi.string().trim().min(100).max(5000).required()
+});
+
 export const refreshSchema = Joi.object({
   refreshToken: Joi.string().min(40).required()
 });

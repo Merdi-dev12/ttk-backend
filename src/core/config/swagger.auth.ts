@@ -165,6 +165,44 @@ export const authPaths = {
       }
     }
   },
+  '/auth/supabase': {
+    post: {
+      tags: ['Auth'],
+      summary: 'Se connecter avec Supabase Auth',
+      description:
+        'Verifie le access_token Supabase, cree ou relie le compte local par supabase_user_id ou email, puis retourne les jetons TTK habituels.',
+      requestBody: requestBody('SupabaseLoginRequest'),
+      responses: {
+        '200': jsonResponse(
+          'Le compte Supabase est authentifie et une session TTK est creee.',
+          'LoginResponse'
+        ),
+        '400': validationError,
+        '401': errorResponse(
+          'Le jeton Supabase est invalide ou expire.',
+          'INVALID_SUPABASE_TOKEN',
+          'Jeton Supabase invalide ou expire'
+        ),
+        '403': errorResponse(
+          'Le compte relie a ete revoque.',
+          'ACCOUNT_REVOKED',
+          'Ce compte a ete revoque'
+        ),
+        '409': errorResponse(
+          'Le compte Supabase entre en conflit avec un compte existant.',
+          'SUPABASE_ACCOUNT_CONFLICT',
+          'Le compte Supabase entre en conflit avec un compte existant'
+        ),
+        '429': rateLimitError,
+        '503': errorResponse(
+          'SUPABASE_URL ou SUPABASE_ANON_KEY ne sont pas configures.',
+          'SUPABASE_AUTH_NOT_CONFIGURED',
+          'La connexion Supabase n est pas configuree'
+        ),
+        '500': internalError
+      }
+    }
+  },
   '/auth/refresh': {
     post: {
       tags: ['Auth'],

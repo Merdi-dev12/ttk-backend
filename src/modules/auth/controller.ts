@@ -11,6 +11,7 @@ import {
 } from './profile.service.js';
 import * as authService from './service.js';
 import { loginWithGoogle } from './google.service.js';
+import { loginWithSupabase } from './supabase.service.js';
 import {
   listSessions as listUserSessions,
   revokeSession as revokeUserSession
@@ -61,6 +62,12 @@ export const login: RequestHandler = async (request, response) => {
 export const googleLogin: RequestHandler = async (request, response) => {
   const { credential } = request.validated?.body as { credential: string };
   const data = await loginWithGoogle(credential, sessionMetadata(request));
+  response.json({ status: 'success', data });
+};
+
+export const supabaseLogin: RequestHandler = async (request, response) => {
+  const { accessToken } = request.validated?.body as { accessToken: string };
+  const data = await loginWithSupabase(accessToken, sessionMetadata(request));
   response.json({ status: 'success', data });
 };
 

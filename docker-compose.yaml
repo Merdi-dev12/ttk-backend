@@ -50,6 +50,8 @@ services:
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@ttk-services.agency}
       RESEND_INBOUND_CONTACT_EMAIL: ${RESEND_INBOUND_CONTACT_EMAIL:-contact@ttk-services.agency}
       RESEND_NOTIFICATION_TO_EMAIL: ${RESEND_NOTIFICATION_TO_EMAIL:-}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

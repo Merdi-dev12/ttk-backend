@@ -14,6 +14,7 @@ import {
   registerSchema,
   resetPasswordSchema,
   sessionParamsSchema,
+  supabaseLoginSchema,
   updateProfileSchema,
   verifyRegistrationSchema
 } from './schema.js';
@@ -55,6 +56,12 @@ router.post(
   authLimiter,
   validate({ body: googleLoginSchema }),
   catchAsync(controller.googleLogin)
+);
+router.post(
+  '/supabase',
+  authLimiter,
+  validate({ body: supabaseLoginSchema }),
+  catchAsync(controller.supabaseLogin)
 );
 router.post(
   '/refresh',

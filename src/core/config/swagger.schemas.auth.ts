@@ -109,6 +109,18 @@ export const authSchemas = {
       }
     }
   },
+  SupabaseLoginRequest: {
+    type: 'object',
+    required: ['accessToken'],
+    properties: {
+      accessToken: {
+        type: 'string',
+        description:
+          'Access token de la session Supabase obtenu apres connexion Google via Supabase Auth.',
+        example: 'eyJhbGciOiJIUzI1NiIsImtpZCI6Ii4uLiJ9...'
+      }
+    }
+  },
   RefreshRequest: {
     type: 'object',
     required: ['refreshToken'],
