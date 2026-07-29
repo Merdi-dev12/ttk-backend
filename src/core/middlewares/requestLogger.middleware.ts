@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import type { RequestHandler } from 'express';
+import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 const sensitiveQueryPattern =
@@ -27,6 +28,10 @@ function redactUrl(originalUrl: string): string {
   return `${url.pathname}${url.search}`;
 }
 
+function isHealthcheckRequest(method: string, originalUrl: string): boolean {
+  return method === 'GET' && originalUrl.split('?')[0] === `${config.apiPrefix}/health`;
+}
+
 export const requestLogger: RequestHandler = (request, response, next) => {
   const startedAt = process.hrtime.bigint();
   const requestId = requestIdFromHeader(request.headers['x-request-id']);
@@ -35,6 +40,10 @@ export const requestLogger: RequestHandler = (request, response, next) => {
   response.setHeader('X-Request-Id', requestId);
 
   response.on('finish', () => {
+    if (isHealthcheckRequest(request.method, request.originalUrl)) {
+      return;
+    }
+
     const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
     const level = response.statusCode >= 500 ? 'error' : 'http';
 
@@ -51,4 +60,3 @@ export const requestLogger: RequestHandler = (request, response, next) => {
 
   next();
 };
-

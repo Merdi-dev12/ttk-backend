@@ -57,7 +57,7 @@ function resolveCorsOrigin(
 }
 
 app.disable('x-powered-by');
-app.set('trust proxy', 1);
+app.set('trust proxy', config.trustProxy);
 app.use(requestLogger);
 app.use(rejectSuspiciousRequests);
 app.use(
@@ -70,9 +70,9 @@ app.use(
     origin: resolveCorsOrigin,
     credentials: !isCorsWildcard,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Authorization', 'Content-Type', 'X-Request-Id'],
     exposedHeaders: ['X-Request-Id', 'RateLimit', 'RateLimit-Policy'],
-    maxAge: 600
+    maxAge: 600,
+    optionsSuccessStatus: 204
   })
 );
 app.use(
