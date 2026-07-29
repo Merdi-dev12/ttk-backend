@@ -75,6 +75,14 @@ app.use(
     optionsSuccessStatus: 204
   })
 );
+app.use((request, response, next) => {
+  if (request.method === 'OPTIONS') {
+    response.status(204).send();
+    return;
+  }
+
+  next();
+});
 app.use(
   config.apiPrefix,
   rateLimit({
