@@ -57,7 +57,7 @@ function resolveCorsOrigin(
 }
 
 app.disable('x-powered-by');
-app.set('trust proxy', config.trustProxy);
+app.set('trust proxy', 1);
 app.use(requestLogger);
 app.use(rejectSuspiciousRequests);
 app.use(
