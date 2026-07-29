@@ -29,19 +29,19 @@ jobs:
             git reset --hard origin/main
             git clean -df
             
-            # 3. Relancer l'orchestration Docker Compose (Reconstruit les images de prod)
-            docker compose up -d --build
+            # 3. Relancer l'orchestration Docker Compose de production
+            docker compose --env-file .env.production -f compose.prod.yaml up -d --build --wait
             
             # 4. Exécuter les scripts de base de données et d'indexation en production
             # On utilise les scripts prod: compilés en JavaScript natif
             
             echo "🗄️ Exécution des migrations SQL..."
-            docker compose exec -T api npm run prod:db:migrate
+            docker compose --env-file .env.production -f compose.prod.yaml exec -T api npm run prod:db:migrate
             
             echo "🌱 Seeding du catalogue..."
-            docker compose exec -T api npm run prod:db:seed:catalog
+            docker compose --env-file .env.production -f compose.prod.yaml exec -T api npm run prod:db:seed:catalog
             
             echo "🔍 Réindexation Meilisearch..."
-            docker compose exec -T api npm run prod:search:reindex
+            docker compose --env-file .env.production -f compose.prod.yaml exec -T api npm run prod:search:reindex
             
             echo "✅ Déploiement et initialisation réussis avec succès !"

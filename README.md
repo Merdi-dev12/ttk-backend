@@ -2,10 +2,12 @@
 
 API Express 5 et TypeScript de la marketplace multi-services TTK.
 
-## Demarrage complet
+## Demarrage local
 
 ```powershell
 npm install
+# si .env n'existe pas encore :
+# Copy-Item .env.local.example .env
 npm run infra:up
 npm run db:migrate:docker
 npm run admin:create:docker
@@ -29,6 +31,24 @@ Pour arreter tous les conteneurs :
 npm run infra:down
 ```
 
+Le local utilise toujours `.env` et `compose.dev.yaml`.
+
+## Demarrage production
+
+Sur le VPS, creer `.env.production` a partir de `.env.production.example`,
+puis y mettre les vraies valeurs de production.
+
+```bash
+cp .env.production.example .env.production
+npm run infra:prod:up
+npm run db:migrate:prod
+npm run admin:create:prod
+```
+
+La production utilise toujours `.env.production` et `compose.prod.yaml`.
+Il n'y a plus de fichier `docker-compose.yaml` par defaut dans ce projet afin
+d'eviter de lancer le mauvais environnement par accident.
+
 ## Commandes
 
 | Commande | Description |
@@ -37,17 +57,23 @@ npm run infra:down
 | `npm run typecheck` | Verifie les types |
 | `npm run build` | Compile dans `dist/` |
 | `npm start` | Execute la version compilee |
-| `npm run infra:up` | Demarre API, workers, PostgreSQL, Redis et Meilisearch |
-| `npm run infra:down` | Arrete tous les conteneurs |
+| `npm run infra:up` | Demarre l'environnement local avec `.env` et `compose.dev.yaml` |
+| `npm run infra:down` | Arrete l'environnement local sans supprimer les volumes |
+| `npm run infra:prod:up` | Demarre l'environnement production avec `.env.production` et `compose.prod.yaml` |
+| `npm run infra:prod:down` | Arrete l'environnement production sans supprimer les volumes |
 | `npm run db:migrate` | Applique les migrations depuis la machine |
-| `npm run db:migrate:docker` | Applique les migrations depuis l'API Docker |
+| `npm run db:migrate:docker` | Applique les migrations depuis l'API Docker locale |
+| `npm run db:migrate:prod` | Applique les migrations depuis l'API Docker production |
 | `npm run db:seed:catalog` | Cree 15 services de demo, 75 produits et 225 images parlantes |
-| `npm run db:seed:catalog:docker` | Execute le seed catalogue depuis l'API Docker |
+| `npm run db:seed:catalog:docker` | Execute le seed catalogue depuis l'API Docker locale |
+| `npm run db:seed:catalog:prod` | Execute le seed catalogue depuis l'API Docker production |
 | `npm run admin:create` | Cree l'unique admin depuis `.env` |
-| `npm run admin:create:docker` | Cree ou reinitialise l'admin depuis Docker |
+| `npm run admin:create:docker` | Cree ou reinitialise l'admin local depuis Docker |
+| `npm run admin:create:prod` | Cree ou reinitialise l'admin production depuis Docker |
 | `npm run worker:email` | Lance le worker BullMQ d'emails |
 | `npm run worker:search` | Lance le worker d'indexation Meilisearch |
-| `npm run search:reindex:docker` | Reconstruit tout l'index catalogue |
+| `npm run search:reindex:docker` | Reconstruit tout l'index catalogue local |
+| `npm run search:reindex:prod` | Reconstruit tout l'index catalogue production |
 
 Le demarrage de l'API n'applique aucune migration et ne cree aucune donnee.
 
@@ -178,40 +204,45 @@ Content-Type: application/json
 - Meilisearch contient une copie optimisee des services et produits actifs.
 - Suspendre ou supprimer un service/produit le retire de la recherche.
 - Les volumes Docker nommes conservent les donnees apres `infra:down`.
+- Les donnees locales et production ne partagent pas les memes volumes :
+  `ttk-backend-dev_*` en local et `ttk-backend-prod_*` en production.
 - Ne pas utiliser `docker compose down -v` ni supprimer les volumes Docker
-  `ttk-backend_*` sans sauvegarde: cela efface PostgreSQL, Redis,
+  `ttk-backend-dev_*` ou `ttk-backend-prod_*` sans sauvegarde: cela efface PostgreSQL, Redis,
   Meilisearch ou MinIO.
 
 Connexion pgAdmin locale :
 
 ```text
 Host: 127.0.0.1
-Port: 55432
+Port: 5433
 Database: ttk_db
 Username: ttk_admin
 Password: valeur de DB_PASSWORD dans .env
 ```
 
-Le port hote `55432` evite les conflits avec une autre installation
+Le port hote `5433` evite les conflits avec une autre installation
 PostgreSQL Windows utilisant deja `5432`. Entre les conteneurs, PostgreSQL
 continue d'utiliser son port standard `5432`.
 
 ## Configuration
 
-Copier `.env.example` vers `.env`, puis remplacer tous les secrets et les
-identifiants SMTP. Les principaux groupes sont :
+Copier `.env.local.example` vers `.env` pour le local, ou
+`.env.production.example` vers `.env.production` pour le VPS. Les principaux
+groupes sont :
 
 - HTTP : `HOST`, `PORT`, `API_PREFIX`, `CORS_ORIGIN`;
 - donnees : `DATABASE_URL`, `REDIS_URL`, `MEILI_HOST`;
 - securite : `JWT_SECRET`, durees OTP/JWT;
+- stockage : `STORAGE_ENDPOINT`, `STORAGE_PUBLIC_BASE_URL`, cles MinIO;
 - email : `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`;
-- identité email : `MAIL_FROM_NAME`, `MAIL_BRAND_NAME`, `MAIL_LOGO_URL`,
+- identite email : `MAIL_FROM_NAME`, `MAIL_BRAND_NAME`, `MAIL_LOGO_URL`,
   `MAIL_SUPPORT_EMAIL`, `FRONTEND_URL`;
-- Google Login React : `GOOGLE_CLIENT_ID` uniquement côté backend; le même
-  identifiant public est exposé au front via `VITE_GOOGLE_CLIENT_ID`;
+- Supabase Login : `SUPABASE_URL`, `SUPABASE_ANON_KEY`;
+- Google Login legacy : `GOOGLE_CLIENT_ID` uniquement cote backend; le meme
+  identifiant public est expose au front via `VITE_GOOGLE_CLIENT_ID`;
 - admin initial : `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
 
-Ne jamais versionner `.env`.
+Ne jamais versionner `.env` ni `.env.production`.
 
 ## Architecture
 
