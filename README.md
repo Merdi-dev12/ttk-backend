@@ -49,6 +49,29 @@ La production utilise toujours `.env.production` et `compose.prod.yaml`.
 Il n'y a plus de fichier `docker-compose.yaml` par defaut dans ce projet afin
 d'eviter de lancer le mauvais environnement par accident.
 
+Si `.env.production` existe deja sur le VPS, ajouter aussi ces variables
+d'orchestration Docker :
+
+```dotenv
+COMPOSE_ENV_FILE=.env.production
+API_APP_ROLE=api
+EMAIL_WORKER_APP_ROLE=email-worker
+SEARCH_WORKER_APP_ROLE=search-worker
+API_IMAGE=ttk-backend-api:prod
+API_BUILD_TARGET=production
+POSTGRES_INTERNAL_PORT=5432
+DOCKER_DATABASE_URL=postgresql://USER:PASSWORD@postgres:5432/DB_NAME
+REDIS_INTERNAL_PORT=6379
+DOCKER_REDIS_URL=redis://:PASSWORD@redis:6379
+MEILI_HOST=http://meilisearch:7700
+DOCKER_MEILI_HOST=http://meilisearch:7700
+MEILI_DB_PATH=/meili_data/data.ms
+MEILI_ENV=production
+DOCKER_STORAGE_ENDPOINT=http://minio:9000
+STORAGE_INTERNAL_PORT=9000
+STORAGE_CONSOLE_INTERNAL_PORT=9001
+```
+
 ## Commandes
 
 | Commande | Description |
