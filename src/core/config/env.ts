@@ -207,11 +207,10 @@ function assertProductionSecurity(): void {
     ],
     'email-worker': [
       ['REDIS_URL', env.REDIS_URL],
-      ['SMTP_HOST', env.SMTP_HOST],
-      ['SMTP_USER', env.SMTP_USER],
-      ['SMTP_PASS', env.SMTP_PASS],
-      ['MAIL_FROM', env.MAIL_FROM],
-      ['CONTACT_TO_EMAIL', env.CONTACT_TO_EMAIL ?? env.MAIL_SUPPORT_EMAIL]
+      [
+        'CONTACT_TO_EMAIL',
+        env.CONTACT_TO_EMAIL ?? env.MAIL_SUPPORT_EMAIL ?? env.RESEND_INBOUND_CONTACT_EMAIL
+      ]
     ],
     'search-worker': [
       ['DATABASE_URL', env.DATABASE_URL],
@@ -227,6 +226,19 @@ function assertProductionSecurity(): void {
   for (const [name, value] of requiredByRole[env.APP_ROLE]) {
     if (!value || placeholderValues.has(value)) {
       issues.push(`${name} must be configured with a real secret in production`);
+    }
+  }
+
+  if (env.APP_ROLE === 'email-worker') {
+    const smtpConfigured = Boolean(
+      env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS && env.MAIL_FROM
+    );
+    const resendConfigured = Boolean(env.RESEND_API_KEY && env.RESEND_FROM_EMAIL);
+
+    if (!smtpConfigured && !resendConfigured) {
+      issues.push(
+        'email-worker requires either RESEND_API_KEY/RESEND_FROM_EMAIL or SMTP_HOST/SMTP_USER/SMTP_PASS/MAIL_FROM'
+      );
     }
   }
 
@@ -297,7 +309,8 @@ export const config = Object.freeze({
     brandName: env.MAIL_BRAND_NAME,
     logoUrl: env.MAIL_LOGO_URL,
     supportEmail: env.MAIL_SUPPORT_EMAIL,
-    contactEmail: env.CONTACT_TO_EMAIL ?? env.MAIL_SUPPORT_EMAIL,
+    contactEmail:
+      env.CONTACT_TO_EMAIL ?? env.RESEND_INBOUND_CONTACT_EMAIL ?? env.MAIL_SUPPORT_EMAIL,
     adminEmail: env.ADMIN_EMAIL
   },
   resend: {
@@ -306,7 +319,7 @@ export const config = Object.freeze({
     fromEmail: env.RESEND_FROM_EMAIL,
     inboundContactEmail: env.RESEND_INBOUND_CONTACT_EMAIL,
     notificationToEmail:
-      env.RESEND_NOTIFICATION_TO_EMAIL ?? env.CONTACT_TO_EMAIL ?? env.ADMIN_EMAIL
+      env.RESEND_NOTIFICATION_TO_EMAIL ?? env.ADMIN_EMAIL ?? env.CONTACT_TO_EMAIL
   },
   supabase: {
     url: env.SUPABASE_URL,

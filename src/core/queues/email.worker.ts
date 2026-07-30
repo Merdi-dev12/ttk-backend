@@ -1,9 +1,9 @@
 import { Worker } from 'bullmq';
+import { config } from '../config/env.js';
 import { getRedisConnectionOptions } from '../config/redis.js';
 import {
   mailBrand,
-  mailFrom,
-  mailTransporter,
+  sendTransactionalEmail,
   verifyMailTransport
 } from '../email/mailer.js';
 import {
@@ -14,20 +14,21 @@ import {
   renderOtpEmail,
   renderTestEmail
 } from '../email/templates.js';
+import { renderOrderPaymentLinkEmail } from '../email/orderTemplates.js';
 import { logger } from '../utils/logger.js';
 import type { TransactionalEmailJob } from './email.queue.js';
 
-await verifyMailTransport();
-logger.info('smtp_connection_verified');
+const provider = await verifyMailTransport();
+logger.info('email_provider_ready', { provider });
 
 const worker = new Worker<TransactionalEmailJob>(
   'transactional-emails',
   async (job) => {
     if (job.data.type === 'ADMIN_TEST_EMAIL') {
       const email = renderTestEmail(mailBrand, job.data.platformName);
-      await mailTransporter.sendMail({
-        from: mailFrom,
+      await sendTransactionalEmail({
         to: job.data.to,
+        tags: [{ name: 'category', value: 'admin_test_email' }],
         ...email
       });
       return;
@@ -38,24 +39,37 @@ const worker = new Worker<TransactionalEmailJob>(
       if (!contactEmail) {
         throw new Error('CONTACT_TO_EMAIL or MAIL_SUPPORT_EMAIL is required');
       }
+      const adminNotificationEmail =
+        config.resend.notificationToEmail ?? config.mail.adminEmail ?? contactEmail;
 
       const notification = renderContactNotificationEmail(mailBrand, job.data);
-      await mailTransporter.sendMail({
-        from: mailFrom,
-        to: contactEmail,
+      await sendTransactionalEmail({
+        to: adminNotificationEmail,
         replyTo: {
           name: job.data.name,
           address: job.data.email
         },
+        tags: [{ name: 'category', value: 'contact_notification' }],
         ...notification
       });
 
       const receipt = renderContactReceiptEmail(mailBrand, job.data);
-      await mailTransporter.sendMail({
-        from: mailFrom,
+      await sendTransactionalEmail({
         to: job.data.email,
         replyTo: contactEmail,
+        tags: [{ name: 'category', value: 'contact_receipt' }],
         ...receipt
+      });
+      return;
+    }
+
+    if (job.data.type === 'ORDER_PAYMENT_LINK') {
+      const email = renderOrderPaymentLinkEmail(mailBrand, job.data);
+      await sendTransactionalEmail({
+        to: job.data.to,
+        replyTo: mailBrand.contactEmail,
+        tags: [{ name: 'category', value: 'order_payment_link' }],
+        ...email
       });
       return;
     }
@@ -67,9 +81,12 @@ const worker = new Worker<TransactionalEmailJob>(
       otp: job.data.otp,
       expiresInMinutes: job.data.expiresInMinutes
     });
-    await mailTransporter.sendMail({
-      from: mailFrom,
+    await sendTransactionalEmail({
       to: job.data.to,
+      tags: [{
+        name: 'category',
+        value: isRegistration ? 'registration_otp' : 'password_reset_otp'
+      }],
       ...email
     });
   },

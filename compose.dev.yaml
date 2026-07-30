@@ -124,11 +124,11 @@ services:
       MEILI_ENV: ${MEILI_ENV}
       MEILI_NO_ANALYTICS: "true"
     ports:
-      - "127.0.0.1:${MEILI_PORT}:${MEILI_PORT}"
+      - "127.0.0.1:${MEILI_PORT}:7700"
     volumes:
       - meilisearch_dev_data:/meili_data
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:$${MEILI_PORT}/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:7700/health || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 5

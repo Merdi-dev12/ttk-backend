@@ -20,6 +20,7 @@ import adminRoutes from './modules/admin/routes.js';
 import announcementRoutes from './modules/announcements/routes.js';
 import catalogRoutes from './modules/catalog/routes.js';
 import contactRoutes from './modules/contact/routes.js';
+import orderRoutes from './modules/orders/routes.js';
 import storageRoutes from './modules/storage/routes.js';
 import publicStorageRoutes from './modules/storage/public.routes.js';
 import userRoutes from './modules/users/routes.js';
@@ -124,6 +125,7 @@ app.get(`${config.apiPrefix}/health`, (_request, response) => {
 app.use(`${config.apiPrefix}/auth`, authRoutes);
 app.use(`${config.apiPrefix}/announcements`, announcementRoutes);
 app.use(`${config.apiPrefix}/contact`, contactRoutes);
+app.use(`${config.apiPrefix}/orders`, orderRoutes);
 app.use(`${config.apiPrefix}/webhooks`, webhookRoutes);
 app.use(`${config.apiPrefix}/admin`, adminRoutes);
 app.use(`${config.apiPrefix}/catalog`, catalogRoutes);

@@ -29,7 +29,7 @@ Depuis `/var/www/ttk-services` sur le VPS :
 
 ```bash
 chmod +x scripts/prod/*.sh
-scripts/prod/backup-all.sh
+./scripts/prod/backup-all.sh
 ```
 
 Cette commande cree :
@@ -59,7 +59,7 @@ crontab -e
 Ajouter une sauvegarde chaque jour a 02:15 UTC :
 
 ```cron
-15 2 * * * cd /var/www/ttk-services && BACKUP_RETENTION_DAYS=14 scripts/prod/backup-all.sh >> logs/backup.log 2>&1
+15 2 * * * cd /var/www/ttk-services && BACKUP_RETENTION_DAYS=14 ./scripts/prod/backup-all.sh >> logs/backup.log 2>&1
 ```
 
 ## Avec Un Seul VPS
@@ -95,7 +95,7 @@ rsync -az merdi-dev@IP_DU_VPS:/var/www/ttk-services/backups/ ./ttk-backups/
 Si tu dois restaurer PostgreSQL :
 
 ```bash
-CONFIRM_RESTORE=yes scripts/prod/restore-postgres.sh ./backups/postgres/postgres-YYYYMMDDTHHMMSSZ.dump
+CONFIRM_RESTORE=yes ./scripts/prod/restore-postgres.sh ./backups/postgres/postgres-YYYYMMDDTHHMMSSZ.dump
 ```
 
 Apres restauration :
@@ -129,7 +129,7 @@ Quand tu auras une deuxieme destination, la meilleure approche sera :
 ## Checklist Securite Immediate
 
 - Regenerer les secrets qui ont deja ete partages hors du VPS.
-- Garder `TRUST_PROXY=true` quand Nginx est devant l'API.
+- Garder `TRUST_PROXY=1` quand Nginx est devant l'API sur le meme VPS.
 - Garder `CORS_ORIGIN` strict, sans `*` en production.
 - Garder le port API Docker lie a `127.0.0.1`, pas expose directement.
 - Ne jamais executer `docker compose down -v` en production.

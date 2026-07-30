@@ -23,7 +23,23 @@ export interface ContactEmailJob {
   message: string;
 }
 
-export type TransactionalEmailJob = OtpEmailJob | TestEmailJob | ContactEmailJob;
+export interface OrderPaymentLinkEmailJob {
+  type: 'ORDER_PAYMENT_LINK';
+  to: string;
+  customerName: string;
+  reference: string;
+  paymentUrl: string;
+  serviceName: string;
+  productName?: string | null;
+  amount?: string | null;
+  currency?: string | null;
+}
+
+export type TransactionalEmailJob =
+  | OtpEmailJob
+  | TestEmailJob
+  | ContactEmailJob
+  | OrderPaymentLinkEmailJob;
 
 type EmailQueue = Queue<
   TransactionalEmailJob,
@@ -69,5 +85,11 @@ export async function enqueueTestEmail(data: TestEmailJob): Promise<void> {
 }
 
 export async function enqueueContactEmail(data: ContactEmailJob): Promise<void> {
+  await getEmailQueue().add(data.type, data);
+}
+
+export async function enqueueOrderPaymentLinkEmail(
+  data: OrderPaymentLinkEmailJob
+): Promise<void> {
   await getEmailQueue().add(data.type, data);
 }

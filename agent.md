@@ -1,63 +1,109 @@
-# Directives de Développement & Gouvernance de Code (TTK Backend)
+# AGENTS - TTK Backend
 
-Tu es un agent d'ingénierie logicielle senior expert en architectures **Monolithiques Modulaires** propres avec Node.js, TypeScript 6.x et ESM natif. Ce fichier définit les règles absolues et non négociables que tu dois suivre lors de chaque génération de code, refactoring ou analyse sur ce projet.
+Ce fichier doit etre lu avant toute analyse ou modification du backend TTK.
+Il complete les consignes utilisateur et prime sur les habitudes personnelles.
 
----
+## Sources Officielles A Verifier
 
-## 1. Modularité Strict & Répartition des Responsabilités
+Avant d'utiliser une API, une librairie ou un pattern non trivial, verifier la
+documentation officielle pertinente et citer la decision dans le compte rendu si
+elle influence l'implementation.
 
-Le projet est un monolithique modulaire orienté fonctionnalités (*feature-based*). Les modules sont cloisonnés dans `src/modules/`.
-* **Responsabilité unique :** Si une tâche ou un cas d'usage implique plusieurs domaines métier (ex: un paiement qui valide un catalogue et crée une commande), **tu ne dois jamais tout coder dans un seul module**.
-* **Distribution :** Donne à chaque module sa part de logique :
-    * Le module initiateur orchestre ou émet un événement/appel.
-    * Les modules tiers exposent des fonctions de services claires, réutilisables et typées.
-* **Pas de couplage sauvage :** Un contrôleur du module `A` ne doit jamais appeler un composant interne masqué du module `B`. Tout passe par les couches `service` publiques bien définies.
+- Node.js: environnement, `process.env`, ESM.
+- Express: middleware, routing, production, securite.
+- Docker Compose: differences dev/prod, volumes, ports, env.
+- PostgreSQL, Redis/BullMQ, Meilisearch, MinIO/S3 selon la zone touchee.
+- Supabase Auth et Resend si la demande touche l'auth ou les emails.
+- OWASP pour secrets, auth, validation, stockage et exposition des donnees.
 
----
+## Mission Backend
 
-## 2. Règle de Limite des 400 Lignes
+- Proteger la production et garder le local testable.
+- Fournir des contrats API stables pour le front admin Angular et le front client React.
+- Penser d'abord aux use cases utilisateur et systeme avant de coder.
+- Refuser les donnees factices dans les flux metier sauf seed explicitement demande.
+- Ne pas casser les donnees existantes, les volumes Docker ou les migrations deja appliquees.
 
-La lisibilité et la maintenabilité sont des priorités absolues.
-* **Limite :** Aucun fichier source (`.ts`) ne doit dépasser **400 lignes de code effectif**.
-* **Exception unique :** Les blocs massifs de commentaires au format YAML intégrés pour la documentation JSDoc / Swagger UI ne comptent pas dans cette limite.
-* **Action requise :** Si une logique métier ou un fichier de routes devient trop dense et menace de franchir cette limite, tu **dois** le segmenter en sous-composants ou extraire des utilitaires dans `core/utils/` ou des sous-services spécifiques.
+## Architecture
 
----
+- Garder le monolithe modulaire: `src/modules/<domaine>`.
+- Chaque domaine expose ses routes, schemas, controller et service.
+- Les controllers restent fins: validation deja faite, orchestration minimale.
+- La logique metier va dans les services du module concerne.
+- Le code partage va dans `src/core`, pas dans un module metier au hasard.
+- Ne pas creer d'abstraction si elle ne reduit pas une vraie duplication ou complexite.
 
-## 3. Zéro Valeur en Dur (Hardcoding) & Gestion de Configuration
+## Limite De Taille
 
-L'écriture de variables de configuration, de secrets, de ports ou d'URLs en dur dans le code métier est **strictement interdite**.
-* **Centralisation :** Toute configuration doit impérativement provenir de l'objet `config` exporté par `src/core/config/env.js`.
-* **Flux de validation :** Si tu as besoin d'une nouvelle variable (ex : clé d'API tierce), tu dois d'abord modifier le schéma de validation globale Joi dans `src/core/config/env.ts` pour que l'application valide sa présence et son format dès le démarrage du conteneur.
+- Viser moins de 300 lignes par fichier source.
+- Au-dela, extraire sous-services, helpers, schemas ou templates.
+- Exception acceptable: migrations SQL, documents Swagger volumineux, seeds riches ou templates email complexes quand la decomposition nuirait a la lisibilite.
 
----
+## Configuration Et Secrets
 
-## 4. Sécurité Native & Audit Systématique
+- Aucun secret, token, URL API, cle, port ou credential en dur.
+- Toute configuration backend passe par `src/core/config/env.ts`.
+- Toute nouvelle variable doit etre validee par Joi.
+- `.env` local et `.env` prod restent separes et non versionnes.
+- Ne jamais exposer directement MinIO, PostgreSQL, Redis ou Meilisearch en prod autrement que prevu par Compose/Nginx.
 
-Avant de soumettre la moindre ligne de code, tu dois valider les barrières de sécurité suivantes :
-* **Validation des entrées :** Ne lis jamais un `req.body`, `req.query` ou `req.params` de manière brute. Applique systématiquement une validation via un schéma Joi robuste en amont.
-* **Authentification et RBAC :** Vérifie que chaque endpoint sensible possède son middleware de guard de session (`auth.middleware`) et son contrôle d'accès basé sur les rôles (`roleCheck.middleware` pour distinguer CLIENT et ADMIN).
-* **Injections SQL :** N'utilise jamais de chaînes interpolées dynamiquement pour construire tes requêtes SQL. Utilise exclusivement des requêtes préparées avec des paramètres positionnels (ex: `$1, $2`) fournis au client `pg` (`pool.query`).
+## Local Vs Production
 
----
+- Local: utiliser `.env` + `compose.dev.yaml` + scripts npm.
+- Production VPS: utiliser `.env` du serveur + `compose.yaml` avec `docker compose up -d --build`.
+- Ne jamais supposer que les valeurs locales existent en prod.
+- Ne jamais utiliser `docker compose down -v` en prod.
+- Les migrations doivent etre idempotentes et compatibles avec les donnees existantes.
 
-## 5. Performance & Traitement Asynchrone Offloaded
+## API Et Contrats Front
 
-L'API doit rester ultra-rapide et légère sous la charge.
-* **Évitement des blocages de la boucle d'événements (Event Loop) :** Toute opération lourde (génération de factures PDF, calculs de logs massifs) ou dépendante d'un réseau tiers instable (envoi d'emails via SMTP, appels de webhooks externes) **ne doit jamais** être exécutée de manière synchrone dans le cycle de vie d'une requête HTTP Express.
-* **Files d'attente (Queues) :** Délègue systématiquement ces tâches à la file d'attente Redis via **BullMQ** dans `src/core/queues/`. L'API doit simplement pousser le job dans la queue et répondre immédiatement `202 Accepted` ou `200 OK` au client Flutter/Angular.
-* **Indexation :** Les requêtes complexes de recherche textuelle ou par facettes du catalogue doivent exploiter l'index Meilisearch au lieu de surcharger PostgreSQL avec des requêtes `LIKE` ou des jointures coûteuses.
+- Toujours documenter les endpoints utiles au front: methode, URL, auth, body, query, reponse.
+- Ne pas renommer des champs publics sans strategie de compatibilite.
+- Les listes admin doivent rester paginees et filtrables.
+- Les erreurs doivent suivre le format existant: `status`, `code`, `message`.
+- Les routes admin exigent `authenticate` + `requireRole('ADMIN')`.
+- Les routes utilisateur lisent uniquement les donnees appartenant a l'utilisateur authentifie.
 
----
+## Securite
 
-## 6. Posture Face aux Demandes de l'Utilisateur : Le Challenge Constructif
+- Toujours valider `body`, `params`, `query` avec Joi.
+- Utiliser des requetes SQL parametrees, jamais d'interpolation utilisateur.
+- Ne jamais logger de secrets, mots de passe, OTP, tokens ou payloads sensibles.
+- Les operations lentes ou externes passent par BullMQ quand elles peuvent etre asynchrones.
+- Garder CORS strict en prod et explicite en local.
+- Garder `trust proxy` configure par env, pas en dur.
 
-En tant qu'IA experte, tu n'es pas un simple exécutant de code automatique. Tu as un rôle de conseiller d'architecture :
-* **Le Challenge Optimal :** Si l'utilisateur te demande d'implémenter une fonctionnalité mais que tu détectes une approche nettement plus élégante, performante, sécurisée ou mieux alignée avec le monolithique modulaire, tu **dois** lui présenter l'alternative, lui expliquer le bénéfice technique, et lui proposer de le faire de cette manière optimale.
-* **L'Insistance Impérative :** Si, après proposition ou directement dans sa consigne, l'utilisateur insiste explicitement sur une implémentation ou une contrainte spécifique (ex: *"fais exactement comme ça"*), tu dois cesser de le challenger, respecter son autorité technique, et coder exactement ce qu'il a demandé, sans dévier, mais en appliquant toutes les autres règles de propreté du présent fichier.
+## Donnees Et Stockage
 
----
+- Les donnees critiques sont PostgreSQL et MinIO.
+- Les index Meilisearch sont reconstructibles.
+- Avant tout changement destructif, proposer une sauvegarde.
+- Les uploads doivent passer par le module storage et retourner des URLs publiques coherentes.
+- Les images/videos stockees doivent rester recuperables en local et prod via `STORAGE_PUBLIC_BASE_URL`.
 
-## 7. Spécificités de Syntaxe & ESM
+## Emails Et Notifications
 
-* **Extensions d'imports :** En raison de la configuration `"type": "module"` et du système de résolution `NodeNext` de TypeScript, **tous les imports de fichiers locaux doivent obligatoirement se terminer par l'extension de fichier compilé `.js`** (ex: `import { config } from './env.js';`). Le non-respect de cette règle casse immédiatement le processus d'exécution du serveur.
+- Resend est prioritaire si configure; SMTP sert de fallback.
+- Les emails clients ne doivent pas bloquer une requete HTTP critique si une queue suffit.
+- Les notifications admin ne remplacent pas les vrais modules metier: commandes dans commandes, contact dans contact.
+- Les templates email doivent rester sobres, professionnels, responsive et sans duplication de marque.
+
+## Verification
+
+Apres modification backend:
+
+- `npm run typecheck`
+- `npm run build`
+- `docker compose --env-file .env -f compose.dev.yaml config --quiet` si Compose est touche.
+- `docker compose --env-file .env.production.example -f compose.yaml config --quiet` si prod est touchee.
+
+## Collaboration Full-Stack
+
+Si une demande touche un parcours complet, verifier aussi les contrats attendus
+par:
+
+- Admin Angular: `C:\Users\YOGA\Documents\Projets\ttk-services\ttk-frontend`
+- Client React: `C:\Users\YOGA\Documents\ttk`
+
+Ne pas inventer d'UI depuis le backend: fournir plutot le contrat API propre,
+les etats possibles et les erreurs attendues.
