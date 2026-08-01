@@ -222,9 +222,19 @@ export async function createOrder(input: CreateOrderInput) {
     let product = null;
     if (input.productId) {
       const productResult = await client.query(
-        `SELECT id, service_id, name, slug, description, status
-         FROM products
-         WHERE id = $1 AND service_id = $2`,
+        `SELECT p.id, p.service_id, p.name, p.slug, p.description, p.status,
+                COALESCE((
+                  SELECT jsonb_agg(jsonb_build_object(
+                    'id', pi.id,
+                    'url', pi.url,
+                    'isPrimary', pi.is_primary,
+                    'displayOrder', pi.display_order
+                  ) ORDER BY pi.is_primary DESC, pi.display_order, pi.created_at)
+                  FROM product_images pi
+                  WHERE pi.product_id = p.id
+                ), '[]'::jsonb) AS images
+         FROM products p
+         WHERE p.id = $1 AND p.service_id = $2`,
         [input.productId, input.serviceId]
       );
       product = productResult.rows[0] ?? null;

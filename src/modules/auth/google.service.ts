@@ -99,7 +99,7 @@ async function findOrCreateUser(
     const updated = await client.query<PublicUser>(
       `UPDATE users SET
          google_sub = $2,
-         avatar_url = COALESCE(avatar_url, $3),
+         avatar_url = COALESCE(NULLIF($3, ''), NULLIF(avatar_url, '')),
          updated_at = NOW()
        WHERE id = $1
        RETURNING id, nom, postnom, email, role, status,

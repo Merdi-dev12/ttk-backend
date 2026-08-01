@@ -44,12 +44,25 @@ export async function listAdminNotifications(query: AdminNotificationsQuery) {
   );
 
   const result = await pool.query(
-    `SELECT id, type, title, message, metadata,
-            read_at AS "readAt",
-            created_at AS "createdAt"
-     FROM admin_notifications
+    `SELECT n.id, n.type, n.title, n.message, n.metadata,
+            n.read_at AS "readAt",
+            n.created_at AS "createdAt",
+            u.id AS "senderUserId",
+            NULLIF(TRIM(CONCAT_WS(' ', NULLIF(u.nom, ''), NULLIF(u.postnom, ''))), '') AS "senderUserName",
+            u.avatar_url AS "senderAvatarUrl"
+     FROM admin_notifications n
+     LEFT JOIN LATERAL (
+       SELECT LOWER(COALESCE(
+         NULLIF(n.metadata->>'email', ''),
+         NULLIF(n.metadata->>'senderEmail', ''),
+         NULLIF(substring(n.metadata->>'from' from '<([^>]+)>'), ''),
+         NULLIF(substring(n.metadata->>'from' from '([[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,})'), ''),
+         NULLIF(n.metadata->>'from', '')
+       )) AS email
+     ) sender ON TRUE
+     LEFT JOIN users u ON LOWER(u.email) = sender.email
      WHERE ($1::BOOLEAN = FALSE OR read_at IS NULL)
-     ORDER BY created_at DESC
+     ORDER BY n.created_at DESC
      LIMIT $2 OFFSET $3`,
     [unreadOnly, query.limit, offset]
   );
