@@ -31,7 +31,7 @@ function layout(
   const supportEmail = brand.contactEmail ?? brand.supportEmail;
   const support = supportEmail
     ? `Besoin d'aide ? <a href="mailto:${escapeHtml(supportEmail)}" style="color:#2563eb;text-decoration:none">${escapeHtml(supportEmail)}</a>`
-    : 'Cet email a ete envoye automatiquement.';
+    : 'Cet email a été envoyé automatiquement.';
 
   return `<!doctype html>
 <html lang="fr">
@@ -60,7 +60,7 @@ function layout(
       <tr>
         <td style="padding:22px 34px;background:#fafafa;border-top:1px solid #eeeeee;font-size:12px;line-height:1.65;color:#6b7280">
           <div style="margin-bottom:6px">${support}</div>
-          <div>&copy; ${new Date().getUTCFullYear()} ${safeBrand}. Tous droits reserves.</div>
+          <div>&copy; ${new Date().getUTCFullYear()} ${safeBrand}. Tous droits réservés.</div>
         </td>
       </tr>
     </table>
@@ -94,15 +94,15 @@ export function renderOrderPaymentLinkEmail(
 
   const content = `
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#374151">Bonjour ${safeCustomerName},</p>
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#374151">Votre commande a ete validee. Vous pouvez maintenant poursuivre vers le paiement depuis le lien ci-dessous.</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.65;color:#374151">Votre commande a été validée. Vous pouvez maintenant poursuivre vers le paiement depuis le lien ci-dessous.</p>
     <div style="margin:0 0 22px;padding:18px 20px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px">
-      <div style="margin-bottom:10px;font-size:14px;line-height:1.5;color:#374151">Reference : ${safeReference}</div>
+      <div style="margin-bottom:10px;font-size:14px;line-height:1.5;color:#374151">Référence : ${safeReference}</div>
       <div style="font-size:14px;line-height:1.5;color:#374151">Service : ${safeServiceName}</div>
       ${safeProductName ? `<div style="margin-top:10px;font-size:14px;line-height:1.5;color:#374151">Produit : ${safeProductName}</div>` : ''}
       ${amountLine}
     </div>
     <div style="margin:0 0 22px">
-      <a href="${safePaymentUrl}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#111827;color:#ffffff;text-decoration:none;font-size:14px;font-weight:500">Proceder au paiement</a>
+      <a href="${safePaymentUrl}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#111827;color:#ffffff;text-decoration:none;font-size:14px;font-weight:500">Procéder au paiement</a>
     </div>
     <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br><a href="${safePaymentUrl}" style="color:#2563eb;text-decoration:none">${safePaymentUrl}</a></p>`;
 
@@ -111,9 +111,9 @@ export function renderOrderPaymentLinkEmail(
     text: [
       `Bonjour ${input.customerName},`,
       '',
-      'Votre commande a ete validee. Vous pouvez maintenant poursuivre vers le paiement.',
+      'Votre commande a été validée. Vous pouvez maintenant poursuivre vers le paiement.',
       '',
-      `Reference: ${input.reference}`,
+      `Référence: ${input.reference}`,
       `Service: ${input.serviceName}`,
       input.productName ? `Produit: ${input.productName}` : undefined,
       input.amount && input.currency ? `Montant: ${input.amount} ${input.currency}` : undefined,
@@ -123,7 +123,7 @@ export function renderOrderPaymentLinkEmail(
     html: layout(
       brand,
       'Paiement disponible',
-      `Votre commande ${input.reference} a ete validee.`,
+      `Votre commande ${input.reference} a été validée.`,
       content
     )
   };

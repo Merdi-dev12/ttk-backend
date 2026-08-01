@@ -12,7 +12,7 @@ const envSchema = Joi.object({
   PORT: Joi.number().port().default(3000),
   API_PREFIX: Joi.string().pattern(/^\/[a-zA-Z0-9/_-]*$/).default('/api/v1'),
   CORS_ORIGIN: Joi.string().default('*'),
-  FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
+  FRONTEND_URL: Joi.string().uri().default('https://ttk-services.agency'),
   TRUST_PROXY: Joi.alternatives()
     .try(
       Joi.boolean(),

@@ -451,8 +451,8 @@ export async function updateOrderStatus(
        SET status = $2,
            admin_note = CASE WHEN $3::BOOLEAN THEN $4 ELSE admin_note END,
            payment_token = $5,
-           approved_at = CASE WHEN $2 = 'APPROVED' THEN COALESCE(approved_at, NOW()) ELSE approved_at END,
-           cancelled_at = CASE WHEN $2 = 'CANCELLED' THEN COALESCE(cancelled_at, NOW()) ELSE cancelled_at END,
+           approved_at = CASE WHEN $2::order_request_status = 'APPROVED' THEN COALESCE(approved_at, NOW()) ELSE approved_at END,
+           cancelled_at = CASE WHEN $2::order_request_status = 'CANCELLED' THEN COALESCE(cancelled_at, NOW()) ELSE cancelled_at END,
            status_updated_by = $6,
            updated_at = NOW()
        WHERE o.id = $1
@@ -551,6 +551,21 @@ export async function listOrderHistory(orderId: string) {
   );
 
   return { items: result.rows };
+}
+
+export async function deleteOrder(id: string) {
+  const result = await getDatabasePool().query(
+    `DELETE FROM order_requests
+     WHERE id = $1
+     RETURNING id`,
+    [id]
+  );
+
+  if (!result.rows[0]) {
+    throw new AppError(404, 'Commande introuvable', 'ORDER_NOT_FOUND');
+  }
+
+  return { id: result.rows[0].id };
 }
 
 export async function getPaymentOrderByToken(token: string) {

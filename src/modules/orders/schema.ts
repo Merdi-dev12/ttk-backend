@@ -40,6 +40,7 @@ export const publicOrderQuerySchema = Joi.object({
 
 export const adminOrdersQuerySchema = Joi.object({
   ...dataTableFields,
+  limit: Joi.number().integer().min(1).max(500).default(20),
   status: Joi.string().valid('PENDING', 'APPROVED', 'CANCELLED').optional(),
   serviceId: Joi.string().uuid().optional(),
   sortBy: Joi.string()

@@ -48,6 +48,12 @@ export const updateStatus: RequestHandler = async (request, response) => {
   response.json({ status: 'success', data: { order } });
 };
 
+export const remove: RequestHandler = async (request, response) => {
+  const { id } = request.validated?.params as IdParams;
+  await orderService.deleteOrder(id);
+  response.status(204).send();
+};
+
 export const history: RequestHandler = async (request, response) => {
   const { id } = request.validated?.params as IdParams;
   const data = await orderService.listOrderHistory(id);

@@ -44,6 +44,11 @@ admin.patch(
   validate({ params: orderParamsSchema, body: updateOrderStatusSchema }),
   catchAsync(controller.updateStatus)
 );
+admin.delete(
+  '/:id',
+  validate({ params: orderParamsSchema }),
+  catchAsync(controller.remove)
+);
 
 router.use('/admin', admin);
 router.post(
