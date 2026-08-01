@@ -62,6 +62,6 @@ export const history: RequestHandler = async (request, response) => {
 
 export const getPayment: RequestHandler = async (request, response) => {
   const { token } = request.validated?.params as TokenParams;
-  const order = await orderService.getPaymentOrderByToken(token);
+  const order = await orderService.getPaymentOrderByToken(token, request.auth!.email);
   response.json({ status: 'success', data: { order } });
 };

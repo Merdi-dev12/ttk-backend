@@ -71,6 +71,7 @@ router.get(
 );
 router.get(
   '/payment/:token',
+  authenticate,
   validate({ params: paymentTokenParamsSchema }),
   catchAsync(controller.getPayment)
 );

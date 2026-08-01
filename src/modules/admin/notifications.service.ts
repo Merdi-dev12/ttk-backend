@@ -106,3 +106,14 @@ export async function markAllNotificationsAsRead(): Promise<{ updated: number }>
 
   return { updated: result.rowCount ?? 0 };
 }
+
+export async function deleteAdminNotification(id: string) {
+  const result = await getDatabasePool().query(
+    `DELETE FROM admin_notifications
+     WHERE id = $1
+     RETURNING id`,
+    [id]
+  );
+
+  return result.rows[0] ?? null;
+}

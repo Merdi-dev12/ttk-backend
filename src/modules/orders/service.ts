@@ -568,12 +568,14 @@ export async function deleteOrder(id: string) {
   return { id: result.rows[0].id };
 }
 
-export async function getPaymentOrderByToken(token: string) {
+export async function getPaymentOrderByToken(token: string, email: string) {
   const result = await getDatabasePool().query(
     `SELECT ${orderSelection}
      FROM order_requests o
-     WHERE o.payment_token = $1 AND o.status = 'APPROVED'`,
-    [token]
+     WHERE o.payment_token = $1
+       AND o.status = 'APPROVED'
+       AND LOWER(o.customer_email::TEXT) = LOWER($2)`,
+    [token, email]
   );
   const order = result.rows[0];
   if (!order) {

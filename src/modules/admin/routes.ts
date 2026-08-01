@@ -38,6 +38,11 @@ router.patch(
   catchAsync(notificationsController.markRead)
 );
 router.patch('/notifications/read-all', catchAsync(notificationsController.markAllRead));
+router.delete(
+  '/notifications/:id',
+  validate({ params: notificationParamsSchema }),
+  catchAsync(notificationsController.remove)
+);
 router.get('/settings', catchAsync(settingsController.getSettings));
 
 for (const section of Object.keys(settingsSchemas) as Array<

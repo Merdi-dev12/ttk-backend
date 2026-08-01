@@ -30,3 +30,15 @@ export const markAllRead: RequestHandler = async (_request, response) => {
   const data = await notificationService.markAllNotificationsAsRead();
   response.json({ status: 'success', data });
 };
+
+export const remove: RequestHandler = async (request, response) => {
+  const notification = await notificationService.deleteAdminNotification(
+    (request.validated?.params as { id: string }).id
+  );
+
+  if (!notification) {
+    throw new AppError(404, 'Notification introuvable', 'NOTIFICATION_NOT_FOUND');
+  }
+
+  response.json({ status: 'success', data: { id: notification.id } });
+};
